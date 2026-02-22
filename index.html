@@ -572,97 +572,6 @@ td input[type="number"] { padding: 7px 10px; font-size: 13px; }
 }
 .rating-metric-label { font-size: 12px; color: var(--text); min-width: 145px; font-weight: 500; }
 
-/* ===== SCORE SECTION ===== */
-.score-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.score-item {
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.score-label {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-}
-.score-max { font-size: 12px; color: var(--muted); }
-.score-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.score-input-wrap input {
-  width: 62px;
-  text-align: center;
-  font-size: 16px;
-  font-weight: 700;
-  font-family: 'Barlow Condensed', sans-serif;
-  color: var(--gold);
-}
-.score-total-display {
-  background: var(--card);
-  border: 2px solid var(--gold);
-  border-radius: 12px;
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-.score-total-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 16px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-}
-.score-total-value {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 40px;
-  font-weight: 800;
-  color: var(--gold);
-  line-height: 1;
-}
-.score-total-denom { font-size: 20px; color: var(--muted); }
-
-/* ===== VERDICT BUTTONS ===== */
-.verdict-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.verdict-btn {
-  padding: 18px 12px;
-  border-radius: 12px;
-  border: 2px solid var(--border);
-  background: var(--card2);
-  cursor: pointer;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-  transition: all 0.2s;
-  text-align: center;
-}
-.verdict-btn:hover { transform: translateY(-2px); }
-.verdict-btn.approve { color: var(--green); border-color: rgba(39,174,96,0.3); }
-.verdict-btn.approve.selected { background: var(--green); color: #fff; border-color: var(--green); box-shadow: 0 4px 24px rgba(39,174,96,0.4); }
-.verdict-btn.backup { color: var(--gold); border-color: rgba(245,166,35,0.3); }
-.verdict-btn.backup.selected { background: var(--gold); color: #fff; border-color: var(--gold); box-shadow: 0 4px 24px rgba(245,166,35,0.4); }
-.verdict-btn.reject { color: var(--red); border-color: rgba(233,69,96,0.3); }
-.verdict-btn.reject.selected { background: var(--red); color: #fff; border-color: var(--red); box-shadow: 0 4px 24px rgba(233,69,96,0.4); }
 
 /* ===== ADD BUTTON ===== */
 .btn-add {
@@ -787,9 +696,7 @@ td input[type="number"] { padding: 7px 10px; font-size: 13px; }
   .report-num-display { font-size: 14px; padding: 5px 10px; }
   .section-card { padding: 18px 14px; }
   .main { padding: 18px 10px 60px; }
-  .verdict-row { grid-template-columns: 1fr; }
   .photo-grid { grid-template-columns: repeat(2, 1fr); }
-  .score-grid { grid-template-columns: 1fr; }
   .test-grid { grid-template-columns: 1fr 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   th, td { font-size: 11px; padding: 7px 7px; }
@@ -1030,39 +937,6 @@ td input[type="number"] { padding: 7px 10px; font-size: 13px; }
       </div>
     </div>
 
-    <!-- SECTION 7: FINAL VERDICT -->
-    <div class="section-card">
-      <div class="section-header">
-        <div class="section-num">7</div>
-        <div class="section-title">Final Verdict & Score</div>
-      </div>
-
-      <div class="score-grid" id="scoreGrid"></div>
-
-      <div class="score-total-display">
-        <div>
-          <div class="score-total-label">Total Score</div>
-        </div>
-        <div>
-          <span class="score-total-value" id="scoreTotalValue">0</span>
-          <span class="score-total-denom">/100</span>
-        </div>
-      </div>
-
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">Verdict <span class="req">*</span></div>
-      <div class="verdict-row">
-        <button type="button" class="verdict-btn approve" onclick="setVerdict('APPROVE')">✓ Approve</button>
-        <button type="button" class="verdict-btn backup" onclick="setVerdict('BACKUP ONLY')">⚠ Backup Only</button>
-        <button type="button" class="verdict-btn reject" onclick="setVerdict('REJECT')">✕ Reject</button>
-      </div>
-      <input type="hidden" id="verdictValue" value="">
-
-      <div class="form-group">
-        <label>Inspector Notes (optional)</label>
-        <textarea id="inspectorNotes" rows="4" placeholder="Additional observations, recommendations, follow-up actions..."></textarea>
-      </div>
-    </div>
-
     <!-- GENERATE BUTTON -->
     <div class="generate-wrap">
       <button type="button" class="btn-generate" id="generateBtn" onclick="generatePDF()" disabled>
@@ -1087,25 +961,9 @@ td input[type="number"] { padding: 7px 10px; font-size: 13px; }
 // ===== STATE =====
 const STATE = {
   reportNum: 1,
-  verdict: '',
   photos: {}, // key -> { file, dataUrl, label }
   defectRows: 0,
-  scores: {
-    materialWeight: 0,
-    structural: 0,
-    stretch: 0,
-    dimensional: 0,
-    finishing: 0
-  }
 };
-
-const SCORE_CATEGORIES = [
-  { key: 'materialWeight', label: 'Material & Weight', max: 35 },
-  { key: 'structural',     label: 'Structural Integrity', max: 30 },
-  { key: 'stretch',        label: 'Stretch & Recovery', max: 20 },
-  { key: 'dimensional',    label: 'Dimensional Accuracy', max: 10 },
-  { key: 'finishing',      label: 'Finishing & Labels', max: 5 }
-];
 
 const MEASURE_POINTS = [
   'Chest Circumference','Shoulder Width','Garment Length','Sleeve Length'
@@ -1118,7 +976,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initMeasureTable();
   initSupplierPhotos();
   initTrueToSize();
-  initScoreGrid();
   document.getElementById('inspectionDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('qaForm').addEventListener('input', updateProgress);
   document.getElementById('qaForm').addEventListener('change', updateProgress);
@@ -1665,51 +1522,12 @@ function updateDefectSummary() {
   document.getElementById('dBadgeTotal').textContent = `Total: ${critical+major+minor}`;
 }
 
-// ===== SCORE GRID =====
-function initScoreGrid() {
-  const grid = document.getElementById('scoreGrid');
-  SCORE_CATEGORIES.forEach(({ key, label, max }) => {
-    const item = document.createElement('div');
-    item.className = 'score-item';
-    item.innerHTML = `
-      <div class="score-label">${label}<br><span class="score-max">out of ${max}</span></div>
-      <div class="score-input-wrap">
-        <input type="number" min="0" max="${max}" step="1" placeholder="0" id="score-${key}" onchange="calcTotalScore()" oninput="calcTotalScore()">
-        <span style="color:var(--muted);">/${max}</span>
-      </div>
-    `;
-    grid.appendChild(item);
-  });
-}
-
-function calcTotalScore() {
-  let total = 0;
-  SCORE_CATEGORIES.forEach(({ key, max }) => {
-    const val = parseFloat(document.getElementById(`score-${key}`).value) || 0;
-    total += Math.min(val, max);
-    STATE.scores[key] = val;
-  });
-  document.getElementById('scoreTotalValue').textContent = Math.min(total, 100);
-  updateProgress();
-}
-
-// ===== VERDICT =====
-function setVerdict(val) {
-  STATE.verdict = val;
-  document.getElementById('verdictValue').value = val;
-  document.querySelectorAll('.verdict-btn').forEach(btn => btn.classList.remove('selected'));
-  if (val === 'APPROVE') document.querySelector('.verdict-btn.approve').classList.add('selected');
-  if (val === 'BACKUP ONLY') document.querySelector('.verdict-btn.backup').classList.add('selected');
-  if (val === 'REJECT') document.querySelector('.verdict-btn.reject').classList.add('selected');
-  updateProgress();
-}
 
 // ===== PROGRESS BAR =====
 function updateProgress() {
   const required = [
     'productName', 'inspectionDate',
     'sup-url-1', 'sup-material-1', 'sup-size-1',
-    'verdictValue'
   ];
   let filled = 0;
   required.forEach(id => {
@@ -1872,16 +1690,6 @@ async function generatePDF() {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // VERDICT CONFIG
-    // ─────────────────────────────────────────────────────────────
-    const verdictVal = v('verdictValue');
-    function vCfg() {
-      if (verdictVal === 'APPROVE')    return { bg: G_BG, fg: G_DARK, label: 'APPROVED'   };
-      if (verdictVal === 'REJECT')     return { bg: R_BG, fg: R_DARK, label: 'REJECTED'   };
-      return                                  { bg: A_BG, fg: A_DARK, label: 'BACKUP ONLY' };
-    }
-
-    // ─────────────────────────────────────────────────────────────
     // CONTAIN-FIT IMAGE (no stretch, letterbox with white padding)
     // ─────────────────────────────────────────────────────────────
     function imgFit(entry, sx, sy, sw, sh) {
@@ -1975,7 +1783,7 @@ async function generatePDF() {
     // TOTAL PAGE COUNT
     // ─────────────────────────────────────────────────────────────
     const hasCmpRows  = cmpRows.length > 0;
-    const TOTAL_PAGES = hasCmpRows ? 7 : 6;
+    const TOTAL_PAGES = hasCmpRows ? 6 : 5;
 
     // ── Compute per-supplier data ─────────────────────────────────
     const supData = [];
@@ -1995,8 +1803,6 @@ async function generatePDF() {
       supData.push({ s, hand, smell, photomatch, sizing, avg, fulfill, price, photo1, url, material, size });
     }
     const winner = supData.length ? supData.reduce((a, b) => a.avg >= b.avg ? a : b) : { s: 1, avg: 0 };
-    const vc = vCfg();
-    const vpW = verdictVal === 'BACKUP ONLY' ? 34 : 26;
 
     // ── Helper: 5-star rating (vector polygon stars) ─────────────
     function stars5(rating, leftX, cy, activeC, gap = 6.8, outer = 2.6, inner = 1.05) {
@@ -2537,97 +2343,6 @@ async function generatePDF() {
       }
     }
 
-    // ═════════════════════════════════════════════════════════════
-    // PAGE N — FINAL RECOMMENDATION & CTA
-    // ═════════════════════════════════════════════════════════════
-    statusEl.textContent = 'Building final recommendation...';
-    await sleep(30);
-    doc.addPage(); docPage++;
-    chrome('Final Recommendation', docPage, TOTAL_PAGES);
-    y = BODY_TOP + 4;
-
-    // ── Large verdict stamp ───────────────────────────────────────
-    const stampW = 90, stampH = 28;
-    fill(W / 2 - stampW / 2, y, stampW, stampH, vc.bg, 4);
-    stroke(W / 2 - stampW / 2, y, stampW, stampH, vc.fg, 0.8, 4);
-    t(vc.label, W / 2, y + stampH * 0.42, 20, 'bold', vc.fg, 'center');
-    t('FOR BULK ORDER', W / 2, y + stampH * 0.78, 7, 'bold', vc.fg, 'center');
-    y += stampH + 10;
-
-    // ── Recommendation text ───────────────────────────────────────
-    y = sh('Our Recommendation', y);
-    const finalNotes = v('inspectorNotes');
-    const winnerPrice = winner.avg > 0 ? (supData.find(s => s.s === winner.s)?.price || '') : '';
-    const priceNote   = winnerPrice && winnerPrice !== '—' ? ` at ${winnerPrice} per unit` : '';
-    const loserPrices = supData.filter(s => s.s !== winner.s && s.price && s.price !== '—');
-    const valueNote   = loserPrices.length ? ` While ${loserPrices.map(s => `Supplier ${s.s} costs ${s.price}`).join(' and ')}, the superior quality from Supplier ${winner.s}${priceNote} significantly reduces return risk and upholds brand standards.` : (priceNote ? ` Supplier ${winner.s} is priced${priceNote}.` : '');
-    const finalText  = finalNotes ||
-      (winner.avg > 0
-        ? `After a thorough assessment of ${supplierCount} supplier${supplierCount > 1 ? 's' : ''}, Supplier ${winner.s} achieved the highest overall quality score of ${winner.avg.toFixed(1)}/5.${valueNote} We recommend proceeding with Supplier ${winner.s} for your bulk order.`
-        : 'Please complete all supplier ratings to generate a detailed recommendation.');
-    fill(M, y, CW, 32, [245, 247, 250], 3);
-    stroke(M, y, CW, 32, RULE, 0.3, 3);
-    fill(M, y, 3, 32, NAVY, 0);
-    const finalLines = doc.splitTextToSize(finalText, CW - 14);
-    finalLines.slice(0, 4).forEach((ln, li) => t(ln, M + 8, y + 8 + li * 6, 8.5, 'normal', NAVY, 'left'));
-    y += 38;
-
-    // ── Supplier comparison summary table ─────────────────────────
-    y = sh('Supplier Summary', y);
-    const sumCols = [
-      { label: 'Supplier',    w: 26 },
-      { label: 'Hand Feel',   w: 24 },
-      { label: 'Smell',       w: 22 },
-      { label: 'Photo Match', w: 26 },
-      { label: 'Sizing',      w: 22 },
-      { label: 'Avg',         w: 18 },
-      { label: 'Fulfillment', w: 26 },
-      { label: 'Price',       w: 22 },
-    ];
-    y = tHead(sumCols, M, y, 7);
-    supData.forEach((sup, ri) => {
-      const isWin = sup.s === winner.s && winner.avg > 0;
-      if (isWin) fill(M, y, CW, 10, [220, 252, 231]);
-      else if (ri % 2 !== 0) fill(M, y, CW, 10, ZEBRA);
-      hl(y + 10, M, M + CW, RULE, 0.2);
-      const cells = [
-        { text: `Supplier ${sup.s}`, bold: isWin, color: isWin ? G_DARK : NAVY },
-        { text: `${sup.hand}/5`,       color: sup.hand >= 4 ? G_DARK : SLATE },
-        { text: `${sup.smell}/5`,      color: sup.smell >= 4 ? G_DARK : SLATE },
-        { text: `${sup.photomatch}/5`, color: sup.photomatch >= 4 ? G_DARK : SLATE },
-        { text: `${sup.sizing}/5`,     color: sup.sizing >= 4 ? G_DARK : SLATE },
-        { text: sup.avg.toFixed(1),    bold: true, color: isWin ? G_DARK : NAVY },
-        { text: sup.fulfill,           color: SLATE },
-        { text: sup.price,             color: SLATE },
-      ];
-      let cx = M + 3;
-      cells.forEach((cell, ci) => {
-        const col = sumCols[ci];
-        t(String(cell.text), cx, y + 7, 7.5, cell.bold ? 'bold' : 'normal', cell.color || NAVY, 'left');
-        cx += col.w;
-      });
-      if (isWin) t('RECOMMENDED', M + CW - 3, y + 7, 6, 'bold', G_DARK, 'right');
-      y += 10;
-    });
-    y += 10;
-
-    // ── CTA button bar ────────────────────────────────────────────
-    const ctaH = 20;
-    const ctaY = Math.min(y + 10, BODY_BOT - ctaH - 10);
-    fill(M, ctaY, CW, ctaH, NAVY, 3);
-    const ctaWinner = winner.avg > 0 ? `Supplier ${winner.s}` : 'your chosen supplier';
-    t(`REPLY TO APPROVE ${ctaWinner.toUpperCase()} FOR BULK ORDER`, W / 2, ctaY + ctaH * 0.62, 9, 'bold', WHITE, 'center');
-    t(v('inspectionDate'), W / 2, ctaY + ctaH * 0.85, 6, 'normal', [170, 180, 200], 'center');
-
-    // ── Sign-off ──────────────────────────────────────────────────
-    y = ctaY + ctaH + 12;
-    if (y + 14 < BODY_BOT) {
-      hl(y + 13, M + CW - 48, M + CW, SLATE_LT, 0.4);
-      t('Signature', M + CW - 24, y + 15.5, 6, 'normal', SLATE_LT, 'center');
-      t(`Report: ${getReportNumber()}`, M, y + 7, 7, 'normal', SLATE_LT, 'left');
-      t(v('inspectionDate'), M, y + 13, 7, 'normal', SLATE_LT, 'left');
-    }
-
     // ── Save ──────────────────────────────────────────────────────
     statusEl.textContent = 'Saving PDF...';
     await sleep(50);
@@ -2768,26 +2483,6 @@ function fillRandomData() {
   ];
   const sizingNotesEl = document.getElementById('sizingNotes');
   if (sizingNotesEl) sizingNotesEl.value = pick(sizingNotePool);
-
-  // ── Section 6: Scores & Verdict ──────────────────────────────
-  SCORE_CATEGORIES.forEach(({ key, max }) => {
-    // Score between 65 % and 95 % of each category max
-    const score = Math.min(Math.round(max * (0.65 + Math.random() * 0.30)), max);
-    document.getElementById(`score-${key}`).value = score;
-  });
-  calcTotalScore();
-
-  // Weighted random verdict — mostly APPROVE so testing is quick
-  const verdictRoll = Math.random();
-  setVerdict(verdictRoll < 0.65 ? 'APPROVE' : verdictRoll < 0.90 ? 'BACKUP ONLY' : 'REJECT');
-
-  const notesPool = [
-    'Sample quality exceeds expectations. Fabric hand feel is excellent and construction is solid throughout. Ready for bulk.',
-    'Overall good quality. Minor stitching inconsistencies noted on one sample — request QC check before confirming bulk order.',
-    'Material composition confirmed via burn test. Sizing true to spec across all measurement points. Recommend proceeding with preferred supplier.',
-    'Strong contender. Weight and recovery excellent. Advise requesting pre-production sample before committing to full order.',
-  ];
-  document.getElementById('inspectorNotes').value = pick(notesPool);
 
   // Final progress refresh
   updateProgress();
