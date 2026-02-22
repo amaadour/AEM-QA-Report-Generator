@@ -2352,17 +2352,6 @@ async function generatePDF() {
     t('STACKED OVERLAY \u2014 ALL SUPPLIER SAMPLES', M, y + ttsImgH + 5, 5.5, 'bold', SLATE_LT, 'left');
     y += ttsImgH + 14;
 
-    // Sizing & fit notes box
-    const sNotes = v('sizingNotes') || 'No fit notes entered for this inspection.';
-    y = sh('Sizing & Fit Notes', y);
-    const sLines = doc.splitTextToSize(sNotes, CW - 16);
-    const sBoxH  = Math.max(22, sLines.length * 6 + 12);
-    fill(M, y, CW, sBoxH, [245, 247, 250], 3);
-    stroke(M, y, CW, sBoxH, RULE, 0.3, 3);
-    fill(M, y, 3, sBoxH, NAVY, 0);   // left accent bar
-    sLines.slice(0, 5).forEach((ln, li) => t(ln, M + 8, y + 9 + li * 6, 8.5, 'normal', NAVY, 'left'));
-    y += sBoxH + 10;
-
     // Per-supplier sizing summary (hand-feel + sizing scores)
     if (supData.length && y + 40 < BODY_BOT) {
       y = sh('Sizing Consistency by Supplier', y);
@@ -2446,37 +2435,6 @@ async function generatePDF() {
         doc.text(val62, M + CW - 3, mid, { align: 'right' });
         y += RH2;
       });
-    });
-
-    // ── Size Measurements ─────────────────────────────────────────
-    // Estimated height: section header ~10 + table header ~8 + 4 rows×9 = ~54mm
-    y += 6;
-    if (y + 54 > BODY_BOT) {
-      doc.addPage(); docPage++;
-      chrome('Specifications', docPage, TOTAL_PAGES);
-      y = BODY_TOP + 4;
-    }
-    y = sh('Dimensional Inspection', y);
-    const mCols = [
-      { label: 'Measurement Point', w: 54 },
-      { label: 'Spec (cm)',         w: 26 },
-      { label: 'Actual (cm)',       w: 26 },
-      { label: 'Deviation',         w: 26 },
-      { label: 'QC Status',         w: 34 },
-    ];
-    y = tHead(mCols, M, y);
-    getMeasurements().forEach((m, i) => {
-      const dCol    = m.status === 'PASS' ? G_DARK : m.status === 'FAIL' ? R_DARK : SLATE_LT;
-      const stBg    = m.status === 'PASS' ? G_BG : m.status === 'FAIL' ? R_BG : ZEBRA;
-      const stFg    = m.status === 'PASS' ? G_DARK : m.status === 'FAIL' ? R_DARK : SLATE_LT;
-      const stLabel = m.status === 'PASS' ? 'QC PASS' : m.status === 'FAIL' ? 'QC FAIL' : '\u2014';
-      y = tRow([
-        { text: m.point },
-        { text: m.spec,      color: SLATE },
-        { text: m.actual,    color: NAVY  },
-        { text: m.deviation, color: dCol, bold: true },
-        { badgePill: true, text: stLabel, bg: stBg, fg: stFg, bw: 26 },
-      ], mCols, M, y, 10, i);
     });
 
     // ═════════════════════════════════════════════════════════════
