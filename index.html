@@ -2042,18 +2042,6 @@ async function generatePDF() {
       y += detRH;
     });
 
-    // Quality row — per-supplier average of Feel · Craftsmanship · Thickness
-    fill(M, y, CW, detRH, [234, 237, 243]);
-    hl(y + detRH, M, M + CW, NAVY, 0.4);
-    t('Quality', M + 3, y + detRH * 0.68, 7, 'bold', NAVY, 'left');
-    supData.forEach((sup, si) => {
-      const colX = M + detLabelW + si * detSupColW;
-      const qVal = sup.quality > 0 ? sup.quality.toFixed(1) + ' / 5' : '—';
-      t(qVal, colX + detSupColW / 2, y + detRH * 0.68, 7, 'bold',
-        sup.quality >= 4 ? [21, 128, 61] : sup.quality > 0 ? NAVY : SLATE, 'center');
-    });
-    y += detRH;
-
     // Vertical column separators for details table
     if (supData.length > 1) {
       doc.setDrawColor(180, 186, 194);
@@ -2095,6 +2083,7 @@ async function generatePDF() {
       { id: 'hand',       label: 'Hand Feel' },
       { id: 'smell',      label: 'Smell' },
       { id: 'photomatch', label: 'Photo Match' },
+      { id: 'quality',    label: 'Quality' },
     ];
 
     // Shrink the metric label column as supplier count grows so each
