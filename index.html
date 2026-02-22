@@ -1984,8 +1984,8 @@ async function generatePDF() {
       const smell      = parseInt(document.getElementById(`sup${s}-smell`)?.value)      || 0;
       const photomatch = parseInt(document.getElementById(`sup${s}-photomatch`)?.value) || 0;
       const sizing     = parseInt(document.getElementById(`sup${s}-sizing`)?.value)     || 0;
-      const ratings    = [hand, smell, photomatch, sizing];
-      const avg        = ratings.reduce((a, b) => a + b, 0) / 4;
+      const ratings    = [hand, smell, photomatch];
+      const avg        = ratings.reduce((a, b) => a + b, 0) / 3;
       const fulfill    = document.getElementById(`sup-fulfill-${s}`)?.value || '—';
       const price      = document.getElementById(`sup-price-${s}`)?.value  || '—';
       const photo1     = STATE.photos[`sup${s}_photo1`];
@@ -2132,7 +2132,6 @@ async function generatePDF() {
       { id: 'hand',       label: 'Hand Feel' },
       { id: 'smell',      label: 'Smell' },
       { id: 'photomatch', label: 'Photo Match' },
-      { id: 'sizing',     label: 'Sizing Consistency' },
     ];
 
     // Shrink the metric label column as supplier count grows so each
