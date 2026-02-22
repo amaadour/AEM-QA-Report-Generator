@@ -207,6 +207,47 @@ input.valid { border-color: var(--green); }
 input.invalid { border-color: var(--red); }
 select option { background: var(--card); color: var(--text); }
 textarea { resize: vertical; min-height: 80px; }
+
+/* ===== CLEAR INPUT BUTTON ===== */
+.input-wrap {
+  position: relative;
+  display: block;
+}
+.input-wrap input,
+.input-wrap textarea {
+  padding-right: 30px;
+}
+.input-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  display: none;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+}
+.input-clear-btn:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.1);
+}
+.input-wrap.has-value .input-clear-btn {
+  display: flex;
+}
+.input-wrap.is-textarea .input-clear-btn {
+  top: 10px;
+  transform: none;
+}
 .calc-display {
   background: var(--card);
   border: 1px solid var(--border);
@@ -1108,6 +1149,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('inspectionDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('qaForm').addEventListener('input', updateProgress);
   document.getElementById('qaForm').addEventListener('change', updateProgress);
+  initClearButtons();
+  _clearBtnObserver.observe(document.body, { childList: true, subtree: true });
   updateProgress();
 });
 
@@ -2723,6 +2766,54 @@ function fillRandomData() {
   updateProgress();
   showToast('✓ Demo data loaded — ready to generate!', 'success');
 }
+
+// ===== CLEAR TEXT BUTTONS =====
+function attachClearButton(el) {
+  if (el.closest('.input-wrap')) return;
+  const isTextarea = el.tagName.toLowerCase() === 'textarea';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'input-wrap' + (isTextarea ? ' is-textarea' : '');
+  el.parentNode.insertBefore(wrap, el);
+  wrap.appendChild(el);
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'input-clear-btn';
+  btn.setAttribute('aria-label', 'Clear input');
+  btn.innerHTML = '&times;';
+  btn.addEventListener('click', () => {
+    el.value = '';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    wrap.classList.remove('has-value');
+    el.focus();
+  });
+  wrap.appendChild(btn);
+
+  const updateVisibility = () => wrap.classList.toggle('has-value', el.value.length > 0);
+  el.addEventListener('input', updateVisibility);
+  el.addEventListener('change', updateVisibility);
+  updateVisibility();
+}
+
+function initClearButtons() {
+  document.querySelectorAll('input[type="text"], input[type="url"], textarea').forEach(attachClearButton);
+}
+
+const _clearBtnObserver = new MutationObserver(mutations => {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (node.nodeType !== 1) continue;
+      const sel = 'input[type="text"], input[type="url"], textarea';
+      if (node.matches && node.matches(sel)) {
+        attachClearButton(node);
+      } else if (node.querySelectorAll) {
+        node.querySelectorAll(sel).forEach(attachClearButton);
+      }
+    }
+  }
+});
 </script>
 </body>
 </html>
