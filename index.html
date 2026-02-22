@@ -1195,8 +1195,23 @@ function initSensoryStars() {
   });
 }
 
+function calcSupplierQuality(s) {
+  const feel         = parseInt(document.getElementById(`sup${s}-feel`)?.value)         || 0;
+  const craftsmanship = parseInt(document.getElementById(`sup${s}-craftsmanship`)?.value) || 0;
+  const thickness    = parseInt(document.getElementById(`sup${s}-thickness`)?.value)    || 0;
+  const rated = [feel, craftsmanship, thickness].filter(v => v > 0);
+  const display = document.getElementById(`sup${s}-quality-display`);
+  if (!display) return;
+  if (rated.length === 0) {
+    display.textContent = '—';
+  } else {
+    const avg = rated.reduce((a, b) => a + b, 0) / 3;
+    display.textContent = avg.toFixed(1);
+  }
+}
+
 function initSupplierStars(s) {
-  ['smell', 'hand', 'photomatch', 'sizing'].forEach(metric => {
+  ['smell', 'hand', 'photomatch', 'sizing', 'feel', 'craftsmanship', 'thickness'].forEach(metric => {
     const container = document.getElementById(`sup${s}-${metric}-stars`);
     if (!container) return;
     for (let i = 1; i <= 5; i++) {
@@ -1210,6 +1225,9 @@ function initSupplierStars(s) {
           b.classList.toggle('active', idx < i);
         });
         document.getElementById(`sup${s}-${metric}`).value = i;
+        if (['feel', 'craftsmanship', 'thickness'].includes(metric)) {
+          calcSupplierQuality(s);
+        }
         updateProgress();
       };
       container.appendChild(btn);
@@ -1407,6 +1425,33 @@ function createSupplierBlock(s) {
         <div class="star-row" id="sup${s}-sizing-stars" style="gap:6px;"></div>
         <input type="hidden" id="sup${s}-sizing" value="">
         <span style="font-size:10px;color:var(--muted);">1 = Way off → 5 = Perfect</span>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;">Quality Rating</div>
+        <div class="rating-metric-row">
+          <span class="rating-metric-label">Feel</span>
+          <div class="star-row" id="sup${s}-feel-stars" style="gap:6px;"></div>
+          <input type="hidden" id="sup${s}-feel" value="" oninput="calcSupplierQuality(${s})">
+          <span style="font-size:10px;color:var(--muted);">1 = Stiff / Cheap → 5 = Premium</span>
+        </div>
+        <div class="rating-metric-row">
+          <span class="rating-metric-label">Craftsmanship</span>
+          <div class="star-row" id="sup${s}-craftsmanship-stars" style="gap:6px;"></div>
+          <input type="hidden" id="sup${s}-craftsmanship" value="" oninput="calcSupplierQuality(${s})">
+          <span style="font-size:10px;color:var(--muted);">1 = Poor finish → 5 = Flawless</span>
+        </div>
+        <div class="rating-metric-row">
+          <span class="rating-metric-label">Thickness</span>
+          <div class="star-row" id="sup${s}-thickness-stars" style="gap:6px;"></div>
+          <input type="hidden" id="sup${s}-thickness" value="" oninput="calcSupplierQuality(${s})">
+          <span style="font-size:10px;color:var(--muted);">1 = Very thin → 5 = Ideal weight</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--card2);border-radius:8px;border:1px solid var(--border);">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Quality</span>
+          <span id="sup${s}-quality-display" style="font-size:20px;font-weight:700;color:var(--gold);">—</span>
+          <span style="font-size:11px;color:var(--muted);">/ 5</span>
+          <span style="font-size:10px;color:var(--muted);margin-left:4px;">(avg of Feel · Craftsmanship · Thickness)</span>
+        </div>
       </div>
     </div>
     <div class="photo-grid" id="supplier-grid-${s}"></div>
@@ -1879,12 +1924,19 @@ async function generatePDF() {
     // ── Compute per-supplier data ─────────────────────────────────
     const supData = [];
     for (let s = 1; s <= supplierCount; s++) {
-      const hand       = parseInt(document.getElementById(`sup${s}-hand`)?.value)       || 0;
-      const smell      = parseInt(document.getElementById(`sup${s}-smell`)?.value)      || 0;
-      const photomatch = parseInt(document.getElementById(`sup${s}-photomatch`)?.value) || 0;
-      const sizing     = parseInt(document.getElementById(`sup${s}-sizing`)?.value)     || 0;
-      const ratings    = [hand, smell, photomatch];
-      const avg        = ratings.reduce((a, b) => a + b, 0) / 3;
+      const hand          = parseInt(document.getElementById(`sup${s}-hand`)?.value)          || 0;
+      const smell         = parseInt(document.getElementById(`sup${s}-smell`)?.value)         || 0;
+      const photomatch    = parseInt(document.getElementById(`sup${s}-photomatch`)?.value)    || 0;
+      const sizing        = parseInt(document.getElementById(`sup${s}-sizing`)?.value)        || 0;
+      const feel          = parseInt(document.getElementById(`sup${s}-feel`)?.value)          || 0;
+      const craftsmanship = parseInt(document.getElementById(`sup${s}-craftsmanship`)?.value) || 0;
+      const thickness     = parseInt(document.getElementById(`sup${s}-thickness`)?.value)     || 0;
+      const ratings       = [hand, smell, photomatch];
+      const avg           = ratings.reduce((a, b) => a + b, 0) / 3;
+      const qualityRatings = [feel, craftsmanship, thickness].filter(v => v > 0);
+      const quality        = qualityRatings.length > 0
+        ? qualityRatings.reduce((a, b) => a + b, 0) / 3
+        : 0;
       const fulfill    = document.getElementById(`sup-fulfill-${s}`)?.value || '—';
       const price      = document.getElementById(`sup-price-${s}`)?.value  || '—';
       const weight     = document.getElementById(`sup-weight-${s}`)?.value  || '—';
@@ -1892,7 +1944,7 @@ async function generatePDF() {
       const url        = document.getElementById(`sup-url-${s}`)?.value      || '—';
       const material   = document.getElementById(`sup-material-${s}`)?.value  || '—';
       const size       = document.getElementById(`sup-size-${s}`)?.value      || '—';
-      supData.push({ s, hand, smell, photomatch, sizing, avg, fulfill, price, weight, photo1, url, material, size });
+      supData.push({ s, hand, smell, photomatch, sizing, feel, craftsmanship, thickness, quality, avg, fulfill, price, weight, photo1, url, material, size });
     }
     const winner = supData.length ? supData.reduce((a, b) => a.avg >= b.avg ? a : b) : { s: 1, avg: 0 };
 
@@ -1989,6 +2041,18 @@ async function generatePDF() {
       });
       y += detRH;
     });
+
+    // Quality row — per-supplier average of Feel · Craftsmanship · Thickness
+    fill(M, y, CW, detRH, [234, 237, 243]);
+    hl(y + detRH, M, M + CW, NAVY, 0.4);
+    t('Quality', M + 3, y + detRH * 0.68, 7, 'bold', NAVY, 'left');
+    supData.forEach((sup, si) => {
+      const colX = M + detLabelW + si * detSupColW;
+      const qVal = sup.quality > 0 ? sup.quality.toFixed(1) + ' / 5' : '—';
+      t(qVal, colX + detSupColW / 2, y + detRH * 0.68, 7, 'bold',
+        sup.quality >= 4 ? [21, 128, 61] : sup.quality > 0 ? NAVY : SLATE, 'center');
+    });
+    y += detRH;
 
     // Vertical column separators for details table
     if (supData.length > 1) {
@@ -2681,6 +2745,20 @@ function fillRandomData() {
         });
       }
     });
+
+    // Quality ratings: feel, craftsmanship, thickness (3–5)
+    ['feel', 'craftsmanship', 'thickness'].forEach(metric => {
+      const rating    = randI(3, 5);
+      const container = document.getElementById(`sup${s}-${metric}-stars`);
+      const hidden    = document.getElementById(`sup${s}-${metric}`);
+      if (container && hidden) {
+        hidden.value = rating;
+        container.querySelectorAll('.star-btn').forEach((btn, idx) => {
+          btn.classList.toggle('active', idx < rating);
+        });
+      }
+    });
+    calcSupplierQuality(s);
   }
 
   // ── Section 5: Sizing Notes ───────────────────────────────────
