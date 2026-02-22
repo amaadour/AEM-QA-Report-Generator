@@ -937,6 +937,25 @@ td input[type="number"] { padding: 7px 10px; font-size: 13px; }
         <label>Sizing &amp; Fit Notes</label>
         <textarea id="sizingNotes" rows="3" placeholder="e.g. Supplier A runs 2 cm long in sleeve vs. Supplier B. All samples within ±1 cm at chest circumference."></textarea>
       </div>
+
+      <!-- ON-MODEL PHOTOS -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:4px;">On-Model Fit Photos</div>
+          <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:0;">Upload one photo per supplier of the model wearing the sample. The table in the PDF will show one image per supplier.</p>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+          <div class="form-group" style="flex:1;min-width:130px;max-width:200px;">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Model Height (cm)</label>
+            <input type="number" id="modelHeight" value="170" min="140" max="220" placeholder="170" style="margin-top:6px;">
+          </div>
+          <div class="form-group" style="flex:1;min-width:130px;max-width:200px;">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Model Weight (kg)</label>
+            <input type="number" id="modelWeight" value="71" min="40" max="200" placeholder="71" style="margin-top:6px;">
+          </div>
+        </div>
+        <div class="photo-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));" id="tts-model-photo-grid"></div>
+      </div>
     </div>
 
     <!-- GENERATE BUTTON -->
@@ -1130,6 +1149,34 @@ function initSupplierStars(s) {
 function initTrueToSize() {
   const grid = document.getElementById('tts-photo-grid');
   if (grid) grid.appendChild(createPhotoSlot('tts_stacked', 'Stacked Overlay', null));
+  renderModelPhotoSlots();
+}
+
+function renderModelPhotoSlots() {
+  const grid = document.getElementById('tts-model-photo-grid');
+  if (!grid) return;
+  // Preserve existing uploads before clearing
+  const existingPhotos = {};
+  for (let s = 1; s <= 20; s++) {
+    const key = `tts_model_sup${s}`;
+    if (STATE.photos[key]) existingPhotos[key] = STATE.photos[key];
+  }
+  grid.innerHTML = '';
+  for (let s = 1; s <= supplierCount; s++) {
+    const key = `tts_model_sup${s}`;
+    const slot = createPhotoSlot(key, `Supplier ${s}`, null);
+    grid.appendChild(slot);
+    // Re-show preview if photo already uploaded
+    if (existingPhotos[key]) {
+      const previewImg = slot.querySelector(`#img-${key}`);
+      if (previewImg) {
+        previewImg.src = existingPhotos[key].dataUrl;
+        previewImg.style.display = 'block';
+        const placeholder = slot.querySelector('.photo-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+      }
+    }
+  }
 }
 
 // ===== SUPPLIER PHOTO GRID =====
@@ -1229,6 +1276,7 @@ function changeSupplierCount(delta) {
   document.getElementById('supplierCountDisplay').textContent = supplierCount;
   renderSupplierBlocks();
   renderCmpRows(); // keep comparison grid columns in sync
+  renderModelPhotoSlots(); // keep on-model photo grid in sync
 }
 
 function renderSupplierBlocks() {
@@ -2194,6 +2242,58 @@ async function generatePDF() {
     t('STACKED OVERLAY \u2014 ALL SUPPLIER SAMPLES', M, y + ttsImgH + 5, 5.5, 'bold', SLATE_LT, 'left');
     y += ttsImgH + 14;
 
+    // ── On-Model Fit Table ─────────────────────────────────────────
+    {
+      const modelH  = v('modelHeight') || '170';
+      const modelWt = v('modelWeight') || '71';
+
+      // Sub-section eyebrow
+      t('ON-MODEL FIT', M, y, 7, 'bold', SLATE_LT, 'left');
+      y += 6;
+
+      // Model stats descriptor
+      t(`Model: ${modelH} cm \u00B7 ${modelWt} kg`, M, y, 8.5, 'normal', SLATE, 'left');
+      y += 11;
+
+      // Grid layout — up to 4 columns per row
+      const MAX_COLS  = 4;
+      const GAP       = 3;
+      const CELL_H    = 52;  // portrait-friendly cell height
+      const LBL_H     = 8;   // label strip below each cell
+      const ROWS      = Math.ceil(supplierCount / MAX_COLS);
+
+      for (let row = 0; row < ROWS; row++) {
+        const startIdx = row * MAX_COLS;
+        const endIdx   = Math.min(startIdx + MAX_COLS, supplierCount);
+        const colsThisRow = endIdx - startIdx;
+        const cellW    = (CW - GAP * (colsThisRow - 1)) / colsThisRow;
+
+        for (let col = 0; col < colsThisRow; col++) {
+          const s  = startIdx + col + 1;   // supplier number (1-based)
+          const cx = M + col * (cellW + GAP);
+          const cy = y;
+
+          // Cell background + border
+          fill(cx, cy, cellW, CELL_H, ZEBRA, 2);
+          stroke(cx, cy, cellW, CELL_H, RULE, 0.35, 2);
+
+          // Photo
+          const modelPhoto = STATE.photos[`tts_model_sup${s}`];
+          if (modelPhoto) {
+            imgFit(modelPhoto, cx, cy, cellW, CELL_H);
+            stroke(cx, cy, cellW, CELL_H, RULE, 0.35, 2);
+          } else {
+            t('No photo uploaded', cx + cellW / 2, cy + CELL_H / 2 + 2, 6.5, 'normal', SLATE_LT, 'center');
+          }
+
+          // Supplier label strip below cell
+          fill(cx, cy + CELL_H, cellW, LBL_H, RULE, 0);
+          t(`SUPPLIER ${s}`, cx + cellW / 2, cy + CELL_H + LBL_H - 2, 5.5, 'bold', SLATE, 'center');
+        }
+
+        y += CELL_H + LBL_H + (row < ROWS - 1 ? GAP + 2 : 6);
+      }
+    }
 
     // ═════════════════════════════════════════════════════════════
     // PAGE 3+ — SPECIFICATIONS (Product Details + Measurements)
