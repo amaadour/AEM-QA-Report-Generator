@@ -1377,6 +1377,10 @@ function createSupplierBlock(s) {
         <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Unit Price (USD)</label>
         <input type="text" id="sup-price-${s}" placeholder="e.g. $2.40" style="margin-top:6px;" oninput="updateProgress()">
       </div>
+      <div class="form-group" style="flex:1;min-width:160px;max-width:220px;">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Weight (kg)</label>
+        <input type="text" id="sup-weight-${s}" placeholder="e.g. 0.45 kg" style="margin-top:6px;" oninput="updateProgress()">
+      </div>
     </div>
     <div class="supplier-ratings">
       <div class="supplier-rating-heading">Supplier Ratings</div>
@@ -1883,11 +1887,12 @@ async function generatePDF() {
       const avg        = ratings.reduce((a, b) => a + b, 0) / 3;
       const fulfill    = document.getElementById(`sup-fulfill-${s}`)?.value || '—';
       const price      = document.getElementById(`sup-price-${s}`)?.value  || '—';
+      const weight     = document.getElementById(`sup-weight-${s}`)?.value  || '—';
       const photo1     = STATE.photos[`sup${s}_photo1`];
       const url        = document.getElementById(`sup-url-${s}`)?.value      || '—';
       const material   = document.getElementById(`sup-material-${s}`)?.value  || '—';
       const size       = document.getElementById(`sup-size-${s}`)?.value      || '—';
-      supData.push({ s, hand, smell, photomatch, sizing, avg, fulfill, price, photo1, url, material, size });
+      supData.push({ s, hand, smell, photomatch, sizing, avg, fulfill, price, weight, photo1, url, material, size });
     }
     const winner = supData.length ? supData.reduce((a, b) => a.avg >= b.avg ? a : b) : { s: 1, avg: 0 };
 
@@ -1965,11 +1970,12 @@ async function generatePDF() {
       M + detLabelW + 3, y + detRH * 0.68, 7, 'normal', NAVY, 'left');
     y += detRH;
 
-    // Per-supplier rows: Supplier Link, Declared Material, Sample Size
+    // Per-supplier rows: Supplier Link, Declared Material, Sample Size, Weight
     const detRows = [
       { label: 'Supplier Link',     key: 'url'      },
       { label: 'Declared Material', key: 'material' },
       { label: 'Sample Size',       key: 'size'     },
+      { label: 'Weight',            key: 'weight'   },
     ];
     detRows.forEach((row, ri) => {
       if (ri % 2 === 0) fill(M, y, CW, detRH, ZEBRA);
@@ -2647,6 +2653,7 @@ function fillRandomData() {
   // ── Section 4: Supplier Photos & Ratings ─────────────────────
   const fulfillTimes = ['2–3 days', '3–5 days', '5–7 days', '7–10 days', '1–2 weeks'];
   const prices       = ['$1.80', '$2.20', '$2.45', '$2.90', '$3.10', '$3.50', '$4.20'];
+  const weights      = ['0.32 kg', '0.45 kg', '0.50 kg', '0.68 kg', '0.75 kg', '1.00 kg'];
 
   for (let s = 1; s <= supplierCount; s++) {
     const urlEl      = document.getElementById(`sup-url-${s}`);
@@ -2654,11 +2661,13 @@ function fillRandomData() {
     const sizeEl     = document.getElementById(`sup-size-${s}`);
     const fulfillEl  = document.getElementById(`sup-fulfill-${s}`);
     const priceEl    = document.getElementById(`sup-price-${s}`);
+    const weightEl   = document.getElementById(`sup-weight-${s}`);
     if (urlEl)      { urlEl.value      = pick(supplierUrls); urlEl.dispatchEvent(new Event('input')); }
     if (materialEl) { materialEl.value = pick(materials);    materialEl.dispatchEvent(new Event('input')); }
     if (sizeEl)     { sizeEl.value     = pick(sizes);        sizeEl.dispatchEvent(new Event('change')); }
     if (fulfillEl) fulfillEl.value = pick(fulfillTimes);
     if (priceEl)   priceEl.value   = pick(prices);
+    if (weightEl)  weightEl.value  = pick(weights);
 
     // Star ratings (3–5 so results are always interesting)
     ['smell', 'hand', 'photomatch', 'sizing'].forEach(metric => {
