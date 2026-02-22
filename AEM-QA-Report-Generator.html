@@ -1,0 +1,2728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEM QA Report Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0F1117;
+  --panel: #161B27;
+  --card: #1E2535;
+  --card2: #1A2030;
+  --red: #E9455F;
+  --gold: #F5A623;
+  --green: #27AE60;
+  --text: #E8EDF4;
+  --muted: #8892A4;
+  --border: #2A3348;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.25);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--card); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+/* ===== TOP BAR ===== */
+.topbar {
+  background: #111827;
+  border-bottom: 3px solid var(--red);
+  padding: 12px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #FFFFFF;
+}
+.logo span { color: var(--red); }
+.topbar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.report-num-display {
+  margin-left: auto;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-wrap {
+  background: var(--panel);
+  padding: 10px 24px 14px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 65px;
+  z-index: 99;
+}
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.progress-bar-track {
+  background: var(--card2);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* ===== MAIN LAYOUT ===== */
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 16px 60px;
+}
+
+/* ===== SECTION CARDS ===== */
+.section-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  background: var(--red);
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+/* ===== FORM FIELDS ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group.full-width { grid-column: 1 / -1; }
+label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+label .req { color: var(--red); margin-left: 2px; }
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="url"],
+select,
+textarea {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  width: 100%;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(233,69,96,0.15);
+}
+input.valid { border-color: var(--green); }
+input.invalid { border-color: var(--red); }
+select option { background: var(--card); color: var(--text); }
+textarea { resize: vertical; min-height: 80px; }
+.calc-display {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ===== TABLES ===== */
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th {
+  background: var(--card);
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.03); }
+.meas-point { color: var(--muted); font-weight: 500; font-size: 12px; }
+td input[type="number"] { padding: 7px 10px; font-size: 13px; }
+.deviation-cell { font-weight: 600; }
+.status-pass { color: var(--green); font-weight: 700; font-size: 12px; letter-spacing: 1px; }
+.status-fail { color: var(--red); font-weight: 700; font-size: 12px; letter-spacing: 1px; }
+.status-na { color: var(--muted); font-size: 12px; }
+
+/* ===== DEFECT TABLE ===== */
+.defect-table-wrap table { font-size: 13px; }
+.defect-table-wrap td input,
+.defect-table-wrap td select { font-size: 12px; padding: 6px 8px; }
+.severity-critical { color: var(--red); font-weight: 700; }
+.severity-major { color: var(--gold); font-weight: 700; }
+.severity-minor { color: #7EC8E3; font-weight: 700; }
+.btn-remove {
+  background: rgba(233,69,96,0.15);
+  border: 1px solid var(--red);
+  color: var(--red);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.btn-remove:hover { background: var(--red); color: #fff; }
+
+/* ===== DEFECT SUMMARY ===== */
+.defect-summary {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.defect-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.badge-critical { background: rgba(233,69,96,0.15); border: 1px solid var(--red); color: var(--red); }
+.badge-major { background: rgba(245,166,35,0.15); border: 1px solid var(--gold); color: var(--gold); }
+.badge-minor { background: rgba(126,200,227,0.15); border: 1px solid #7EC8E3; color: #7EC8E3; }
+.badge-total { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); }
+
+/* ===== PHYSICAL TESTS ===== */
+.test-block {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.test-block-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+.test-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.toggle-group { display: flex; gap: 8px; }
+.toggle-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  text-align: center;
+}
+.toggle-btn.active-yes { background: var(--red); border-color: var(--red); color: #fff; }
+.toggle-btn.active-no { background: var(--green); border-color: var(--green); color: #fff; }
+.toggle-btn.active-pass { background: var(--green); border-color: var(--green); color: #fff; }
+.toggle-btn.active-fail { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* ===== SENSORY RATINGS ===== */
+.sensory-block {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.sensory-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.sensory-scale { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.star-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.star-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.star-btn.active { background: var(--gold); border-color: var(--gold); color: #fff; box-shadow: 0 0 12px rgba(245,166,35,0.4); }
+.star-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+/* ===== PHOTO UPLOADS ===== */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+.photo-slot {
+  background: var(--card2);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.photo-slot:hover { border-color: var(--red); }
+.photo-slot label {
+  display: block;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.photo-slot input[type="file"] { display: none; }
+.photo-preview-area {
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+}
+.photo-preview-area img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: none;
+}
+.photo-placeholder {
+  color: var(--muted);
+  text-align: center;
+}
+.photo-placeholder svg { width: 32px; height: 32px; opacity: 0.4; margin-bottom: 6px; }
+.photo-slot-label {
+  background: rgba(0,0,0,0.4);
+  text-align: center;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.photo-slot.has-photo { border-color: var(--green); border-style: solid; }
+.photo-slot.has-photo .photo-slot-label { color: var(--green); }
+.defect-photo-label-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 0 0 8px 8px;
+}
+
+/* ===== SUPPLIER PHOTO BLOCKS ===== */
+.supplier-count-control {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+}
+.sup-count-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+.sup-count-btn:hover { border-color: var(--red); color: var(--red); }
+.sup-count-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 28px;
+  text-align: center;
+}
+.supplier-block {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--card2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.supplier-block-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.supplier-block-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+.add-photo-btn {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: 'Barlow', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  width: 100%;
+}
+.add-photo-btn:hover { border-color: var(--red); color: var(--red); }
+.photo-slot-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.photo-slot { position: relative; }
+
+/* ===== PER-SUPPLIER RATINGS ===== */
+.supplier-ratings { margin-bottom: 18px; }
+.supplier-rating-heading {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--gold); margin-bottom: 10px;
+}
+.rating-metric-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px; flex-wrap: wrap;
+}
+.rating-metric-label { font-size: 12px; color: var(--text); min-width: 145px; font-weight: 500; }
+
+/* ===== SCORE SECTION ===== */
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.score-item {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.score-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.score-max { font-size: 12px; color: var(--muted); }
+.score-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.score-input-wrap input {
+  width: 62px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Barlow Condensed', sans-serif;
+  color: var(--gold);
+}
+.score-total-display {
+  background: var(--card);
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.score-total-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.score-total-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1;
+}
+.score-total-denom { font-size: 20px; color: var(--muted); }
+
+/* ===== VERDICT BUTTONS ===== */
+.verdict-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.verdict-btn {
+  padding: 18px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--card2);
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: all 0.2s;
+  text-align: center;
+}
+.verdict-btn:hover { transform: translateY(-2px); }
+.verdict-btn.approve { color: var(--green); border-color: rgba(39,174,96,0.3); }
+.verdict-btn.approve.selected { background: var(--green); color: #fff; border-color: var(--green); box-shadow: 0 4px 24px rgba(39,174,96,0.4); }
+.verdict-btn.backup { color: var(--gold); border-color: rgba(245,166,35,0.3); }
+.verdict-btn.backup.selected { background: var(--gold); color: #fff; border-color: var(--gold); box-shadow: 0 4px 24px rgba(245,166,35,0.4); }
+.verdict-btn.reject { color: var(--red); border-color: rgba(233,69,96,0.3); }
+.verdict-btn.reject.selected { background: var(--red); color: #fff; border-color: var(--red); box-shadow: 0 4px 24px rgba(233,69,96,0.4); }
+
+/* ===== ADD BUTTON ===== */
+.btn-add {
+  background: rgba(233,69,96,0.1);
+  border: 1px dashed var(--red);
+  color: var(--red);
+  border-radius: 8px;
+  padding: 9px 18px;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+.btn-add:hover { background: var(--red); color: #fff; }
+
+/* ===== COMPARISON ROWS ===== */
+.cmp-row-block {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.cmp-row-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===== GENERATE BUTTON ===== */
+.generate-wrap {
+  text-align: center;
+  padding: 20px 0 40px;
+}
+.btn-generate {
+  background: linear-gradient(135deg, var(--red), #c0392b);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 18px 48px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 24px rgba(233,69,96,0.4);
+  position: relative;
+  overflow: hidden;
+}
+.btn-generate:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn-generate:not(:disabled):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(233,69,96,0.5);
+}
+.btn-generate::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(transparent, rgba(255,255,255,0.08), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+@keyframes shimmer {
+  0% { left: -150%; }
+  100% { left: 150%; }
+}
+.progress-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ===== PDF OVERLAY ===== */
+#pdf-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+#pdf-overlay.active { display: flex; }
+.pdf-spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid var(--card);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.pdf-status {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  .topbar { padding: 10px 14px; gap: 10px; }
+  .logo { font-size: 20px; }
+  .report-num-display { font-size: 14px; padding: 5px 10px; }
+  .section-card { padding: 18px 14px; }
+  .main { padding: 18px 10px 60px; }
+  .verdict-row { grid-template-columns: 1fr; }
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .score-grid { grid-template-columns: 1fr; }
+  .test-grid { grid-template-columns: 1fr 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  th, td { font-size: 11px; padding: 7px 7px; }
+}
+
+/* ===== NOTIFICATION ===== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--card);
+  border: 1px solid var(--red);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-size: 14px;
+  color: var(--text);
+  z-index: 2000;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--green); }
+
+/* ===== DEMO FILL BUTTON ===== */
+.btn-fill-demo {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.btn-fill-demo:hover { background: var(--gold); color: #fff; }
+
+/* ===== HELPER CLASSES ===== */
+.mt12 { margin-top: 12px; }
+.row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+
+/* ===== PHOTO NOTES ===== */
+.photo-note-input {
+  display: block; width: 100%;
+  background: var(--bg); border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+  color: var(--muted); padding: 5px 8px;
+  font-size: 10px; font-family: 'Barlow', sans-serif;
+  transition: color 0.2s;
+}
+.photo-note-input:focus { outline: none; color: var(--text); }
+.photo-note-input::placeholder { opacity: 0.45; }
+
+/* ===== STAR RATING ===== */
+.star-btn { font-size: 19px; line-height: 1; }
+.star-btn.active { background: transparent; border-color: var(--gold); color: var(--gold); box-shadow: none; }
+
+/* ===== DEFECT PHOTO SLOTS ===== */
+.defect-photo-slot {
+  background: var(--card2);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+.defect-photo-slot:hover { border-color: var(--red); }
+.defect-photo-slot label { display: block; cursor: pointer; }
+.defect-photo-slot input[type="file"] { display: none; }
+.defect-photo-slot.has-photo { border-color: var(--green); border-style: solid; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="logo">AEM<span>.</span></div>
+    <div class="topbar-title">Quality Assurance</div>
+  </div>
+  <button type="button" class="btn-fill-demo" onclick="fillRandomData()" title="Auto-fill all fields with random sample data for testing">
+    🎲 Fill Demo Data
+  </button>
+  <div class="report-num-display" id="reportNumDisplay">AEM-QA-001</div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>Form Completion</span>
+    <span id="progressPct">0%</span>
+  </div>
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+</div>
+
+<!-- MAIN FORM -->
+<div class="main">
+  <form id="qaForm" novalidate>
+
+    <!-- SECTION 1: PRODUCT IDENTITY -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Product Identity</div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Product Name <span class="req">*</span></label>
+          <input type="text" id="productName" name="productName" placeholder="e.g. Merino Wool Blazer" required>
+        </div>
+        <div class="form-group">
+          <label>Supplier Link <span class="req">*</span></label>
+          <input type="url" id="productUrl" name="productUrl" placeholder="https://detail.1688.com/offer/..." required>
+        </div>
+        <div class="form-group">
+          <label>Declared Material <span class="req">*</span></label>
+          <input type="text" id="declaredMaterial" name="declaredMaterial" placeholder="e.g. 60% Wool / 40% Polyester" required>
+        </div>
+        <div class="form-group">
+          <label>Sample Size Tested <span class="req">*</span></label>
+          <select id="sampleSize" name="sampleSize" required>
+            <option value="">-- Select Size --</option>
+            <option>XXS</option>
+            <option>XS</option>
+            <option>S</option>
+            <option>M</option>
+            <option>L</option>
+            <option>XL</option>
+            <option>XXL</option>
+            <option>3XL</option>
+            <option>4XL</option>
+            <option>5XL</option>
+            <option>6XL</option>
+            <option>7XL</option>
+            <option>8XL</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Inspection Date <span class="req">*</span></label>
+          <input type="date" id="inspectionDate" name="inspectionDate" required>
+        </div>
+        <div class="form-group">
+          <label>Report Number</label>
+          <div class="calc-display" id="reportNumField">AEM-QA-001</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: SIZE MEASUREMENTS -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Size Measurements</div>
+      </div>
+      <div class="table-wrap">
+        <table id="measureTable">
+          <thead>
+            <tr>
+              <th>Measurement Point</th>
+              <th>Spec (cm)</th>
+              <th>Actual (cm)</th>
+              <th>Deviation</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="measureBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 3: DEFECT LOG -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Defect Log</div>
+      </div>
+      <div class="table-wrap defect-table-wrap">
+        <table id="defectTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Defect Description</th>
+              <th>Location</th>
+              <th>Severity</th>
+              <th>Status</th>
+              <th>Supplier</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="defectBody">
+            <!-- rows added dynamically -->
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn-add" onclick="addDefectRow()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
+        Add Defect
+      </button>
+      <div class="defect-summary" id="defectSummary">
+        <div class="defect-badge badge-critical" id="dBadgeCritical">Critical: 0</div>
+        <div class="defect-badge badge-major" id="dBadgeMajor">Major: 0</div>
+        <div class="defect-badge badge-minor" id="dBadgeMinor">Minor: 0</div>
+        <div class="defect-badge badge-total" id="dBadgeTotal">Total: 0</div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: PHOTO UPLOAD -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">Photo Upload</div>
+      </div>
+      <div style="margin-bottom:22px;">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Number of Suppliers</label>
+        <div class="supplier-count-control">
+          <button type="button" class="sup-count-btn" onclick="changeSupplierCount(-1)">−</button>
+          <span class="sup-count-num" id="supplierCountDisplay">1</span>
+          <button type="button" class="sup-count-btn" onclick="changeSupplierCount(1)">+</button>
+        </div>
+      </div>
+      <div id="supplierPhotosContainer"></div>
+    </div>
+
+    <!-- SECTION 5: SUPPLIER TO SUPPLIER COMPARISON -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Supplier to Supplier Comparison</div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
+        Add a row for each view or angle you want to compare. Upload the <strong style="color:var(--text);">same angle</strong> from every supplier — they will appear side-by-side in the PDF comparison table.
+      </p>
+      <div id="cmpRowsContainer">
+        <p style="font-size:12px;color:var(--muted);padding:4px 0;">No views added yet. Click "+ Add View Row" to begin.</p>
+      </div>
+      <button type="button" class="btn-add" onclick="addCmpRow()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;"><path d="M12 5v14M5 12h14"/></svg>
+        Add View Row
+      </button>
+    </div>
+
+    <!-- SECTION 6: TRUE TO SIZE -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <div class="section-title">True to Size Visualization</div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+        Upload a <strong style="color:var(--text);">stacked overlay photo</strong> — garments from each supplier laid on top of one another — to visually demonstrate sizing consistency and deviations across samples.
+      </p>
+      <div class="photo-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));" id="tts-photo-grid"></div>
+      <div class="form-group mt12">
+        <label>Sizing &amp; Fit Notes</label>
+        <textarea id="sizingNotes" rows="3" placeholder="e.g. Supplier A runs 2 cm long in sleeve vs. Supplier B. All samples within ±1 cm at chest circumference."></textarea>
+      </div>
+    </div>
+
+    <!-- SECTION 7: FINAL VERDICT -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">7</div>
+        <div class="section-title">Final Verdict & Score</div>
+      </div>
+
+      <div class="score-grid" id="scoreGrid"></div>
+
+      <div class="score-total-display">
+        <div>
+          <div class="score-total-label">Total Score</div>
+        </div>
+        <div>
+          <span class="score-total-value" id="scoreTotalValue">0</span>
+          <span class="score-total-denom">/100</span>
+        </div>
+      </div>
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">Verdict <span class="req">*</span></div>
+      <div class="verdict-row">
+        <button type="button" class="verdict-btn approve" onclick="setVerdict('APPROVE')">✓ Approve</button>
+        <button type="button" class="verdict-btn backup" onclick="setVerdict('BACKUP ONLY')">⚠ Backup Only</button>
+        <button type="button" class="verdict-btn reject" onclick="setVerdict('REJECT')">✕ Reject</button>
+      </div>
+      <input type="hidden" id="verdictValue" value="">
+
+      <div class="form-group">
+        <label>Inspector Notes (optional)</label>
+        <textarea id="inspectorNotes" rows="4" placeholder="Additional observations, recommendations, follow-up actions..."></textarea>
+      </div>
+    </div>
+
+    <!-- GENERATE BUTTON -->
+    <div class="generate-wrap">
+      <button type="button" class="btn-generate" id="generateBtn" onclick="generatePDF()" disabled>
+        Generate PDF Report
+      </button>
+      <div class="progress-hint" id="generateHint">Complete all required fields to generate the report.</div>
+    </div>
+
+  </form>
+</div>
+
+<!-- PDF OVERLAY -->
+<div id="pdf-overlay">
+  <div class="pdf-spinner"></div>
+  <div class="pdf-status" id="pdfStatus">Preparing report...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+const STATE = {
+  reportNum: 1,
+  verdict: '',
+  photos: {}, // key -> { file, dataUrl, label }
+  defectRows: 0,
+  scores: {
+    materialWeight: 0,
+    structural: 0,
+    stretch: 0,
+    dimensional: 0,
+    finishing: 0
+  }
+};
+
+const SCORE_CATEGORIES = [
+  { key: 'materialWeight', label: 'Material & Weight', max: 35 },
+  { key: 'structural',     label: 'Structural Integrity', max: 30 },
+  { key: 'stretch',        label: 'Stretch & Recovery', max: 20 },
+  { key: 'dimensional',    label: 'Dimensional Accuracy', max: 10 },
+  { key: 'finishing',      label: 'Finishing & Labels', max: 5 }
+];
+
+const MEASURE_POINTS = [
+  'Chest Circumference','Shoulder Width','Garment Length','Sleeve Length'
+];
+
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  initReportNumber();
+  initMeasureTable();
+  initSupplierPhotos();
+  initTrueToSize();
+  initScoreGrid();
+  document.getElementById('inspectionDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('qaForm').addEventListener('input', updateProgress);
+  document.getElementById('qaForm').addEventListener('change', updateProgress);
+  updateProgress();
+});
+
+// ===== REPORT NUMBER =====
+function initReportNumber() {
+  const saved = parseInt(localStorage.getItem('aem_report_counter') || '1');
+  STATE.reportNum = saved;
+  const num = String(saved).padStart(3,'0');
+  document.getElementById('reportNumDisplay').textContent = `AEM-QA-${num}`;
+  document.getElementById('reportNumField').textContent = `AEM-QA-${num}`;
+}
+
+function getReportNumber() {
+  return `AEM-QA-${String(STATE.reportNum).padStart(3,'0')}`;
+}
+
+function incrementReportNumber() {
+  STATE.reportNum++;
+  localStorage.setItem('aem_report_counter', STATE.reportNum);
+}
+
+// ===== MEASURE TABLE =====
+function initMeasureTable() {
+  const tbody = document.getElementById('measureBody');
+  MEASURE_POINTS.forEach((pt, i) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="meas-point">${pt}</td>
+      <td><input type="number" step="0.1" min="0" placeholder="—" data-row="${i}" data-col="spec" onchange="calcDeviation(${i})" oninput="calcDeviation(${i})"></td>
+      <td><input type="number" step="0.1" min="0" placeholder="—" data-row="${i}" data-col="actual" onchange="calcDeviation(${i})" oninput="calcDeviation(${i})"></td>
+      <td class="deviation-cell" id="dev-${i}">—</td>
+      <td id="status-${i}"><span class="status-na">—</span></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function calcDeviation(i) {
+  const spec = parseFloat(document.querySelector(`input[data-row="${i}"][data-col="spec"]`).value);
+  const actual = parseFloat(document.querySelector(`input[data-row="${i}"][data-col="actual"]`).value);
+  const devCell = document.getElementById(`dev-${i}`);
+  const statusCell = document.getElementById(`status-${i}`);
+  if (isNaN(spec) || isNaN(actual)) {
+    devCell.textContent = '—';
+    statusCell.innerHTML = '<span class="status-na">—</span>';
+    return;
+  }
+  const dev = (actual - spec).toFixed(1);
+  devCell.textContent = (dev > 0 ? '+' : '') + dev;
+  const absDev = Math.abs(parseFloat(dev));
+  if (absDev <= 1) {
+    devCell.style.color = 'var(--green)';
+    statusCell.innerHTML = '<span class="status-pass">PASS</span>';
+  } else {
+    devCell.style.color = 'var(--red)';
+    statusCell.innerHTML = '<span class="status-fail">FAIL</span>';
+  }
+  updateProgress();
+}
+
+// ===== GSM CALC =====
+function calcGSM() {
+  const g = parseFloat(document.getElementById('weightG').value);
+  const cm2 = parseFloat(document.getElementById('swatchArea').value);
+  if (!isNaN(g) && !isNaN(cm2) && cm2 > 0) {
+    const gsm = ((g / cm2) * 10000).toFixed(0);
+    document.getElementById('gsmDisplay').textContent = `${gsm} g/m²`;
+  } else {
+    document.getElementById('gsmDisplay').textContent = '— g/m²';
+  }
+}
+
+// ===== RECOVERY CALC =====
+function calcRecovery() {
+  const relaxed = parseFloat(document.getElementById('relaxedLen').value);
+  const stretched = parseFloat(document.getElementById('stretchedLen').value);
+  const recovery = parseFloat(document.getElementById('recoveryLen').value);
+  if (!isNaN(relaxed) && !isNaN(stretched) && !isNaN(recovery) && stretched > relaxed) {
+    const pct = (((stretched - recovery) / (stretched - relaxed)) * 100).toFixed(1);
+    document.getElementById('recoveryPct').textContent = `${pct}%`;
+  } else {
+    document.getElementById('recoveryPct').textContent = '—%';
+  }
+}
+
+// ===== TOGGLE BUTTONS =====
+function setToggle(btn, group) {
+  const val = btn.dataset.val;
+  const isYesNo = val === 'YES' || val === 'NO';
+  const isPassFail = val === 'PASS' || val === 'FAIL';
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(b => {
+    b.className = 'toggle-btn';
+  });
+  if (isYesNo) {
+    btn.classList.add(val === 'YES' ? 'active-yes' : 'active-no');
+  } else if (isPassFail) {
+    btn.classList.add(val === 'PASS' ? 'active-pass' : 'active-fail');
+  }
+  document.getElementById(group).value = val;
+  updateProgress();
+}
+
+// ===== SENSORY STARS =====
+function initSensoryStars() {
+  [
+    { containerId:'smellStars', hiddenId:'smellRating' },
+    { containerId:'handStars', hiddenId:'handRating' },
+    { containerId:'photoMatchStars', hiddenId:'photoMatchRating' }
+  ].forEach(({ containerId, hiddenId }) => {
+    const container = document.getElementById(containerId);
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'star-btn';
+      btn.textContent = i;
+      btn.dataset.val = i;
+      btn.onclick = () => {
+        container.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(hiddenId).value = i;
+        updateProgress();
+      };
+      container.appendChild(btn);
+    }
+  });
+}
+
+function initSupplierStars(s) {
+  ['smell', 'hand', 'photomatch', 'sizing'].forEach(metric => {
+    const container = document.getElementById(`sup${s}-${metric}-stars`);
+    if (!container) return;
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'star-btn';
+      btn.textContent = '\u2605';
+      btn.dataset.val = i;
+      btn.onclick = () => {
+        container.querySelectorAll('.star-btn').forEach((b, idx) => {
+          b.classList.toggle('active', idx < i);
+        });
+        document.getElementById(`sup${s}-${metric}`).value = i;
+        updateProgress();
+      };
+      container.appendChild(btn);
+    }
+  });
+}
+
+// ===== TRUE TO SIZE =====
+function initTrueToSize() {
+  const grid = document.getElementById('tts-photo-grid');
+  if (grid) grid.appendChild(createPhotoSlot('tts_stacked', 'Stacked Overlay', null));
+}
+
+// ===== SUPPLIER PHOTO GRID =====
+let supplierCount = 1;
+const supplierPhotoCounts = {}; // supplierIdx -> number of slots created
+
+// ===== SUPPLIER TO SUPPLIER COMPARISON =====
+let cmpRowCount = 0;
+let cmpRows = []; // [{id, name}]
+
+function renderCmpRows() {
+  const container = document.getElementById('cmpRowsContainer');
+  if (!container) return;
+  if (!cmpRows.length) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--muted);padding:4px 0;">No views added yet. Click &quot;+ Add View Row&quot; to begin.</p>';
+    return;
+  }
+  container.innerHTML = cmpRows.map(row => buildCmpRowHTML(row)).join('');
+  // Re-preview already-uploaded photos after re-render
+  cmpRows.forEach(row => {
+    for (let s = 1; s <= supplierCount; s++) {
+      const key   = `cmp_${row.id}_sup${s}`;
+      const entry = STATE.photos[key];
+      if (entry) {
+        const img = document.getElementById(`img-${key}`);
+        const ph  = document.querySelector(`#slot-${key} .photo-placeholder`);
+        const sl  = document.getElementById(`slot-${key}`);
+        if (img) { img.src = entry.dataUrl; img.style.display = 'block'; }
+        if (ph)  ph.style.display = 'none';
+        if (sl)  sl.classList.add('has-photo');
+      }
+    }
+  });
+}
+
+function buildCmpRowHTML(row) {
+  const slots = Array.from({ length: supplierCount }, (_, si) => {
+    const s   = si + 1;
+    const key = `cmp_${row.id}_sup${s}`;
+    return `
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Supplier ${s}</div>
+        <div class="photo-slot" id="slot-${key}" onclick="document.getElementById('file-${key}').click()" style="cursor:pointer;">
+          <div id="preview-${key}" class="photo-preview-area" style="min-height:100px;">
+            <div class="photo-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:22px;height:22px;opacity:0.4;display:block;margin:0 auto 4px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <div style="font-size:10px;">Upload</div>
+            </div>
+            <img id="img-${key}" style="width:100%;height:100px;object-fit:cover;border-radius:6px;display:none;" alt="Supplier ${s} comparison">
+          </div>
+          <input type="file" id="file-${key}" accept="image/*" style="display:none" onchange="handlePhotoUpload('${key}', this, 'Supplier ${s}')">
+        </div>
+      </div>`;
+  }).join('');
+  const safeName = row.name.replace(/"/g, '&quot;');
+  return `
+    <div class="cmp-row-block" id="cmp-row-${row.id}">
+      <div class="cmp-row-header">
+        <input type="text" placeholder="e.g. Front View, Back View, Detail Shot…" value="${safeName}"
+          oninput="updateCmpRowName(${row.id}, this.value)"
+          style="flex:1;font-size:13px;font-weight:600;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);">
+        <button type="button" class="btn-remove" onclick="removeCmpRow(${row.id})">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${supplierCount},1fr);gap:10px;margin-top:12px;">
+        ${slots}
+      </div>
+    </div>`;
+}
+
+function addCmpRow() {
+  cmpRowCount++;
+  cmpRows.push({ id: cmpRowCount, name: '' });
+  renderCmpRows();
+  updateProgress();
+}
+
+function removeCmpRow(id) {
+  cmpRows = cmpRows.filter(r => r.id !== id);
+  for (let s = 1; s <= supplierCount; s++) delete STATE.photos[`cmp_${id}_sup${s}`];
+  renderCmpRows();
+  updateProgress();
+}
+
+function updateCmpRowName(id, val) {
+  const row = cmpRows.find(r => r.id === id);
+  if (row) row.name = val;
+}
+
+function initSupplierPhotos() {
+  supplierCount = 1;
+  document.getElementById('supplierCountDisplay').textContent = 1;
+  renderSupplierBlocks();
+}
+
+function changeSupplierCount(delta) {
+  supplierCount = Math.max(1, supplierCount + delta);
+  document.getElementById('supplierCountDisplay').textContent = supplierCount;
+  renderSupplierBlocks();
+  renderCmpRows(); // keep comparison grid columns in sync
+}
+
+function renderSupplierBlocks() {
+  const container = document.getElementById('supplierPhotosContainer');
+  const existing = Array.from(container.querySelectorAll('.supplier-block'));
+
+  // Remove blocks beyond current count
+  for (let i = existing.length - 1; i >= supplierCount; i--) {
+    existing[i].remove();
+  }
+
+  // Add missing blocks
+  for (let s = existing.length + 1; s <= supplierCount; s++) {
+    if (!supplierPhotoCounts[s]) supplierPhotoCounts[s] = 0;
+    container.appendChild(createSupplierBlock(s));
+    initSupplierStars(s);
+    addSupplierPhoto(s); // add first slot automatically
+  }
+}
+
+function createSupplierBlock(s) {
+  const block = document.createElement('div');
+  block.className = 'supplier-block';
+  block.id = `supplier-block-${s}`;
+  block.innerHTML = `
+    <div class="supplier-block-header">
+      <span class="supplier-block-title">Supplier ${s}</span>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;">
+      <div class="form-group" style="flex:1;min-width:200px;max-width:260px;">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Local Fulfillment Time</label>
+        <input type="text" id="sup-fulfill-${s}" placeholder="e.g. 3–5 days" style="margin-top:6px;" oninput="updateProgress()">
+      </div>
+      <div class="form-group" style="flex:1;min-width:160px;max-width:220px;">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">Unit Price (USD)</label>
+        <input type="text" id="sup-price-${s}" placeholder="e.g. $2.40" style="margin-top:6px;" oninput="updateProgress()">
+      </div>
+    </div>
+    <div class="supplier-ratings">
+      <div class="supplier-rating-heading">Supplier Ratings</div>
+      <div class="rating-metric-row">
+        <span class="rating-metric-label">Smell</span>
+        <div class="star-row" id="sup${s}-smell-stars" style="gap:6px;"></div>
+        <input type="hidden" id="sup${s}-smell" value="">
+        <span style="font-size:10px;color:var(--muted);">1 = Chemical → 5 = No odour</span>
+      </div>
+      <div class="rating-metric-row">
+        <span class="rating-metric-label">Hand Feel</span>
+        <div class="star-row" id="sup${s}-hand-stars" style="gap:6px;"></div>
+        <input type="hidden" id="sup${s}-hand" value="">
+        <span style="font-size:10px;color:var(--muted);">1 = Rough → 5 = Premium soft</span>
+      </div>
+      <div class="rating-metric-row">
+        <span class="rating-metric-label">Photo Match</span>
+        <div class="star-row" id="sup${s}-photomatch-stars" style="gap:6px;"></div>
+        <input type="hidden" id="sup${s}-photomatch" value="">
+        <span style="font-size:10px;color:var(--muted);">1 = Misleading → 5 = Identical</span>
+      </div>
+      <div class="rating-metric-row">
+        <span class="rating-metric-label">Sizing Consistency</span>
+        <div class="star-row" id="sup${s}-sizing-stars" style="gap:6px;"></div>
+        <input type="hidden" id="sup${s}-sizing" value="">
+        <span style="font-size:10px;color:var(--muted);">1 = Way off → 5 = Perfect</span>
+      </div>
+    </div>
+    <div class="photo-grid" id="supplier-grid-${s}"></div>
+    <button type="button" class="add-photo-btn" onclick="addSupplierPhoto(${s})">+ Add Photo</button>
+  `;
+  return block;
+}
+
+function addSupplierPhoto(s) {
+  supplierPhotoCounts[s] = (supplierPhotoCounts[s] || 0) + 1;
+  const photoIdx = supplierPhotoCounts[s];
+  const key = `sup${s}_photo${photoIdx}`;
+  const grid = document.getElementById(`supplier-grid-${s}`);
+  if (grid) grid.appendChild(createPhotoSlot(key, `Photo ${photoIdx}`, s));
+}
+
+function removeSupplierPhoto(key) {
+  delete STATE.photos[key];
+  const slot = document.getElementById(`slot-${key}`);
+  if (slot) slot.remove();
+  updateProgress();
+}
+
+function createPhotoSlot(key, label, supplierIdx) {
+  const slot = document.createElement('div');
+  slot.className = 'photo-slot';
+  slot.id = `slot-${key}`;
+
+  const inputId = `photo-${key}`;
+  const uploadLabel = supplierIdx != null ? `Supplier ${supplierIdx} \u2013 ${label}` : label;
+  slot.innerHTML = `
+    <button type="button" class="photo-slot-remove" onclick="removeSupplierPhoto('${key}')" title="Remove">✕</button>
+    <label for="${inputId}">
+      <div class="photo-preview-area" id="preview-${key}">
+        <div class="photo-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <div style="font-size:10px;">Tap to upload</div>
+        </div>
+        <img id="img-${key}" alt="${label}">
+      </div>
+    </label>
+    <div class="photo-slot-label">${label}</div>
+    <input type="file" id="${inputId}" accept="image/*" onchange="handlePhotoUpload('${key}', this, '${uploadLabel}')">
+    <input type="text" class="photo-note-input" id="note-${key}" placeholder="Add note… (e.g. Buttery soft, true to listing)" oninput="updatePhotoNote('${key}', this.value)">
+  `;
+  return slot;
+}
+
+function updatePhotoNote(key, val) {
+  if (!STATE.photos[key]) STATE.photos[key] = {};
+  STATE.photos[key].note = val;
+}
+
+function handlePhotoUpload(key, input, label) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const rawUrl = e.target.result;
+    // Normalise to JPEG via canvas so jsPDF always gets a clean, correctly-oriented image
+    const tempImg = new Image();
+    tempImg.onload = () => {
+      const MAX = 1600; // cap resolution for PDF performance
+      let iw = tempImg.naturalWidth;
+      let ih = tempImg.naturalHeight;
+      if (iw > MAX || ih > MAX) {
+        if (iw > ih) { ih = Math.round(ih * MAX / iw); iw = MAX; }
+        else          { iw = Math.round(iw * MAX / ih); ih = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width  = iw;
+      canvas.height = ih;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(tempImg, 0, 0, iw, ih);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+      const existingNote = STATE.photos[key]?.note || '';
+      STATE.photos[key] = {
+        file, dataUrl,
+        iw, ih, // store natural dims for aspect-ratio-aware PDF rendering
+        label: label || key,
+        note: existingNote
+      };
+      const previewImg = document.getElementById(`img-${key}`);
+      const placeholder = document.querySelector(`#preview-${key} .photo-placeholder`);
+      previewImg.src = dataUrl;
+      previewImg.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
+      document.getElementById(`slot-${key}`).classList.add('has-photo');
+      updateProgress();
+    };
+    tempImg.src = rawUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== DEFECT TABLE =====
+let defectCount = 0;
+
+function createDefectPhotoSlotHTML(defectId, photoNum) {
+  const key = `defect_${defectId}_photo${photoNum}`;
+  const inputId = `photo-${key}`;
+  return `<div class="defect-photo-slot" id="slot-${key}">
+    <label for="${inputId}">
+      <div id="preview-${key}" style="min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;">
+        <div class="photo-placeholder" style="font-size:9px;text-align:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:20px;height:20px;opacity:0.4;display:block;margin:0 auto 4px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Photo ${photoNum}
+        </div>
+        <img id="img-${key}" alt="Defect Photo ${photoNum}" style="width:100%;height:80px;object-fit:cover;border-radius:4px;display:none;">
+      </div>
+    </label>
+    <div style="background:rgba(0,0,0,0.4);text-align:center;padding:4px 6px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);">Photo ${photoNum}</div>
+    <input type="file" id="${inputId}" accept="image/*" onchange="handlePhotoUpload('${key}', this, 'Defect ${defectId} Photo ${photoNum}')">
+  </div>`;
+}
+
+function addDefectRow() {
+  defectCount++;
+  const id = defectCount;
+  const tbody = document.getElementById('defectBody');
+
+  // Build supplier options from current supplierCount
+  let supplierOpts = '<option value="">— Select —</option>';
+  for (let s = 1; s <= supplierCount; s++) {
+    supplierOpts += `<option value="${s}">Supplier ${s}</option>`;
+  }
+
+  // Main data row
+  const tr = document.createElement('tr');
+  tr.id = `defect-row-${id}`;
+  tr.innerHTML = `
+    <td style="color:var(--muted);font-size:12px;">${id}</td>
+    <td><input type="text" placeholder="e.g. Loose thread at hem" onchange="updateDefectSummary()"></td>
+    <td><input type="text" placeholder="e.g. Left sleeve cuff" onchange="updateDefectSummary()"></td>
+    <td>
+      <select onchange="updateDefectSummary()">
+        <option value="">Select</option>
+        <option>Critical</option>
+        <option>Major</option>
+        <option>Minor</option>
+      </select>
+    </td>
+    <td>
+      <select onchange="updateDefectSummary()">
+        <option value="">Select</option>
+        <option>Fixable</option>
+        <option>Not Fixable</option>
+      </select>
+    </td>
+    <td>
+      <select id="defect-supplier-${id}" onchange="updateDefectSummary()">
+        ${supplierOpts}
+      </select>
+    </td>
+    <td><button type="button" class="btn-remove" onclick="removeDefectRow(${id})">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+
+  // Photo sub-row — 4 fixed slots spanning all columns
+  const photoTr = document.createElement('tr');
+  photoTr.id = `defect-photos-row-${id}`;
+  photoTr.innerHTML = `
+    <td colspan="7" style="padding:8px 10px 14px;background:rgba(0,0,0,0.15);">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">Defect Photos</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        ${[1,2,3,4].map(p => createDefectPhotoSlotHTML(id, p)).join('')}
+      </div>
+    </td>
+  `;
+  tbody.appendChild(photoTr);
+
+  updateDefectSummary();
+  updateProgress();
+}
+
+function removeDefectRow(id) {
+  const row = document.getElementById(`defect-row-${id}`);
+  if (row) row.remove();
+  const photoRow = document.getElementById(`defect-photos-row-${id}`);
+  if (photoRow) photoRow.remove();
+  for (let p = 1; p <= 4; p++) delete STATE.photos[`defect_${id}_photo${p}`];
+  updateDefectSummary();
+  updateProgress();
+}
+
+function updateDefectSummary() {
+  const rows = document.querySelectorAll('#defectBody tr[id^="defect-row-"]');
+  let critical = 0, major = 0, minor = 0;
+  rows.forEach(row => {
+    const sel = row.querySelectorAll('select')[0];
+    if (sel) {
+      if (sel.value === 'Critical') critical++;
+      else if (sel.value === 'Major') major++;
+      else if (sel.value === 'Minor') minor++;
+    }
+  });
+  document.getElementById('dBadgeCritical').textContent = `Critical: ${critical}`;
+  document.getElementById('dBadgeMajor').textContent = `Major: ${major}`;
+  document.getElementById('dBadgeMinor').textContent = `Minor: ${minor}`;
+  document.getElementById('dBadgeTotal').textContent = `Total: ${critical+major+minor}`;
+}
+
+// ===== SCORE GRID =====
+function initScoreGrid() {
+  const grid = document.getElementById('scoreGrid');
+  SCORE_CATEGORIES.forEach(({ key, label, max }) => {
+    const item = document.createElement('div');
+    item.className = 'score-item';
+    item.innerHTML = `
+      <div class="score-label">${label}<br><span class="score-max">out of ${max}</span></div>
+      <div class="score-input-wrap">
+        <input type="number" min="0" max="${max}" step="1" placeholder="0" id="score-${key}" onchange="calcTotalScore()" oninput="calcTotalScore()">
+        <span style="color:var(--muted);">/${max}</span>
+      </div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function calcTotalScore() {
+  let total = 0;
+  SCORE_CATEGORIES.forEach(({ key, max }) => {
+    const val = parseFloat(document.getElementById(`score-${key}`).value) || 0;
+    total += Math.min(val, max);
+    STATE.scores[key] = val;
+  });
+  document.getElementById('scoreTotalValue').textContent = Math.min(total, 100);
+  updateProgress();
+}
+
+// ===== VERDICT =====
+function setVerdict(val) {
+  STATE.verdict = val;
+  document.getElementById('verdictValue').value = val;
+  document.querySelectorAll('.verdict-btn').forEach(btn => btn.classList.remove('selected'));
+  if (val === 'APPROVE') document.querySelector('.verdict-btn.approve').classList.add('selected');
+  if (val === 'BACKUP ONLY') document.querySelector('.verdict-btn.backup').classList.add('selected');
+  if (val === 'REJECT') document.querySelector('.verdict-btn.reject').classList.add('selected');
+  updateProgress();
+}
+
+// ===== PROGRESS BAR =====
+function updateProgress() {
+  const required = [
+    'productName','productUrl',
+    'declaredMaterial','sampleSize','inspectionDate',
+    'verdictValue'
+  ];
+  let filled = 0;
+  required.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value.toString().trim() !== '') filled++;
+  });
+  const pct = Math.round((filled / required.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  const generateBtn = document.getElementById('generateBtn');
+  const hint = document.getElementById('generateHint');
+  if (pct === 100) {
+    generateBtn.disabled = false;
+    hint.textContent = 'All required fields complete — ready to generate!';
+    hint.style.color = 'var(--green)';
+  } else {
+    generateBtn.disabled = true;
+    hint.textContent = `Complete all required fields to generate the report. (${filled}/${required.length} done)`;
+    hint.style.color = 'var(--muted)';
+  }
+}
+
+// ===== TOAST =====
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+// ===== HELPER: GET FIELD VALUE =====
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+// ===== GET MEASUREMENT DATA =====
+function getMeasurements() {
+  return MEASURE_POINTS.map((pt, i) => {
+    const spec = document.querySelector(`input[data-row="${i}"][data-col="spec"]`).value;
+    const actual = document.querySelector(`input[data-row="${i}"][data-col="actual"]`).value;
+    let deviation = '—', status = '—';
+    if (spec !== '' && actual !== '') {
+      const d = (parseFloat(actual) - parseFloat(spec));
+      deviation = (d >= 0 ? '+' : '') + d.toFixed(1);
+      status = Math.abs(d) <= 1 ? 'PASS' : 'FAIL';
+    }
+    return { point: pt, spec: spec || '—', actual: actual || '—', deviation, status };
+  });
+}
+
+// ===== GET DEFECTS =====
+function getDefects() {
+  const rows = document.querySelectorAll('#defectBody tr[id^="defect-row-"]');
+  const defects = [];
+  rows.forEach((row, i) => {
+    const id = row.id.replace('defect-row-', '');
+    const inputs = row.querySelectorAll('input[type="text"]');
+    const selects = row.querySelectorAll('select');
+    const supplierVal = selects[2]?.value;
+    defects.push({
+      num: i + 1,
+      description: inputs[0]?.value || '—',
+      location: inputs[1]?.value || '—',
+      severity: selects[0]?.value || '—',
+      status: selects[1]?.value || '—',
+      supplier: supplierVal ? `Supplier ${supplierVal}` : '—',
+      photoKeys: [1, 2, 3, 4].map(p => `defect_${id}_photo${p}`)
+    });
+  });
+  return defects;
+}
+
+// ===== PDF GENERATION =====
+async function generatePDF() {
+  const overlay = document.getElementById('pdf-overlay');
+  const statusEl = document.getElementById('pdfStatus');
+  overlay.classList.add('active');
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    // Note: jsPDF uses 'helvetica' as proxy for sans-serif — closest available without embedding
+
+    const W = 210, H = 297;
+    const M = 14;               // page margin
+    const CW = W - M * 2;       // content width = 182 mm
+
+    // ─────────────────────────────────────────────────────────────
+    // B2B MINIMALIST PALETTE
+    // ─────────────────────────────────────────────────────────────
+    const WHITE     = [255, 255, 255];
+    const NAVY      = [17,  24,  39];   // #111827  — primary data
+    const SLATE     = [55,  65,  81];   // #374151  — labels
+    const SLATE_LT  = [107, 114, 128];  // #6B7280  — muted / secondary
+    const RULE      = [229, 231, 235];  // #E5E7EB  — hairlines
+    const ZEBRA     = [249, 250, 251];  // #F9FAFB  — alt row fill
+    const CARD_BG   = [248, 250, 252];  // off-white card background
+
+    const G_DARK    = [21,  128, 61];   // dark green text
+    const G_BG      = [220, 252, 231];  // light green badge bg
+    const R_DARK    = [185, 28,  28];   // dark red text
+    const R_BG      = [254, 226, 226];  // light red badge bg
+    const A_DARK    = [146, 64,  14];   // amber text
+    const A_BG      = [254, 243, 199];  // amber badge bg
+    const B_DARK    = [29,  78,  216];  // blue text (highlight values)
+    const B_BG      = [219, 234, 254];  // blue badge bg
+
+    // ─────────────────────────────────────────────────────────────
+    // LAYOUT CONSTANTS
+    // ─────────────────────────────────────────────────────────────
+    const HEADER_H  = 14;
+    const FOOTER_H  = 9;
+    const BODY_TOP  = HEADER_H + 5;
+    const BODY_BOT  = H - FOOTER_H - 4;
+
+    // ─────────────────────────────────────────────────────────────
+    // CORE PRIMITIVES
+    // ─────────────────────────────────────────────────────────────
+    function fill(x, y, w, h, color, r = 0) {
+      doc.setFillColor(...color);
+      r > 0 ? doc.roundedRect(x, y, w, h, r, r, 'F') : doc.rect(x, y, w, h, 'F');
+    }
+    function stroke(x, y, w, h, color, lw = 0.3, r = 0) {
+      doc.setDrawColor(...color);
+      doc.setLineWidth(lw);
+      r > 0 ? doc.roundedRect(x, y, w, h, r, r, 'S') : doc.rect(x, y, w, h, 'S');
+    }
+    function hl(yPos, x1 = M, x2 = M + CW, color = RULE, lw = 0.25) {
+      doc.setDrawColor(...color);
+      doc.setLineWidth(lw);
+      doc.line(x1, yPos, x2, yPos);
+    }
+    // t() — the single text primitive
+    // baseline-Y is always explicit; align is jsPDF 'left'|'center'|'right'
+    function t(text, x, yBaseline, size, weight, color, align = 'left', mw = null) {
+      doc.setFont('helvetica', weight);
+      doc.setFontSize(size);
+      doc.setTextColor(...color);
+      const opts = { align };
+      if (mw) opts.maxWidth = mw;
+      doc.text(String(text ?? '—'), x, yBaseline, opts);
+    }
+    // pill badge — rounded rectangle with centered label
+    function pill(cx, cy, label, bgC, fgC, pw = 24, ph = 6) {
+      fill(cx - pw / 2, cy - ph / 2, pw, ph, bgC, ph / 2);
+      // baseline offset for vertical centering ≈ ph*0.35
+      t(label, cx, cy + ph * 0.18, 6.5, 'bold', fgC, 'center');
+    }
+    // checkmark (✓) or cross (✕) status symbol
+    function statusMark(x, yBaseline, status) {
+      if (status === 'PASS') {
+        t('✓', x, yBaseline, 9, 'bold', G_DARK, 'left');
+      } else if (status === 'FAIL') {
+        t('✕', x, yBaseline, 9, 'bold', R_DARK, 'left');
+      } else {
+        t('—', x, yBaseline, 8, 'normal', SLATE_LT, 'left');
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // VERDICT CONFIG
+    // ─────────────────────────────────────────────────────────────
+    const verdictVal = v('verdictValue');
+    function vCfg() {
+      if (verdictVal === 'APPROVE')    return { bg: G_BG, fg: G_DARK, label: 'APPROVED'   };
+      if (verdictVal === 'REJECT')     return { bg: R_BG, fg: R_DARK, label: 'REJECTED'   };
+      return                                  { bg: A_BG, fg: A_DARK, label: 'BACKUP ONLY' };
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CONTAIN-FIT IMAGE (no stretch, letterbox with white padding)
+    // ─────────────────────────────────────────────────────────────
+    function imgFit(entry, sx, sy, sw, sh) {
+      if (!entry?.dataUrl) return;
+      const iw = entry.iw || 1, ih = entry.ih || 1;
+      const sc = Math.min(sw / iw, sh / ih);
+      const dw = iw * sc, dh = ih * sc;
+      fill(sx, sy, sw, sh, WHITE);
+      try { doc.addImage(entry.dataUrl, 'JPEG', sx + (sw-dw)/2, sy + (sh-dh)/2, dw, dh, '', 'FAST'); }
+      catch(e) { t('Photo unavailable', sx + sw/2, sy + sh/2, 7.5, 'normal', SLATE_LT, 'center'); }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PAGE CHROME — pure white, AEM left, report# + verdict right
+    // ─────────────────────────────────────────────────────────────
+    function chrome(sectionLabel, pgNum, pgTotal) {
+      fill(0, 0, W, H, WHITE);                  // white page
+      // header area
+      hl(HEADER_H, 0, W, RULE, 0.4);
+      // AEM wordmark — left
+      t('AEM', M, HEADER_H - 4, 12, 'bold', NAVY, 'left');
+      t('Quality Assurance', M + 10, HEADER_H - 4, 7.5, 'normal', SLATE_LT, 'left');
+      // section label — centre
+      t(sectionLabel.toUpperCase(), W / 2, HEADER_H - 4, 7, 'bold', SLATE, 'center');
+      // report number — right of centre
+      t(getReportNumber(), W - M, HEADER_H - 4, 7, 'normal', SLATE_LT, 'right');
+      // footer
+      hl(H - FOOTER_H, 0, W, RULE, 0.3);
+      t('AEM Quality Assurance  ·  Confidential', M, H - 3, 6, 'normal', SLATE_LT, 'left');
+      t(`${pgNum} / ${pgTotal}`, W - M, H - 3, 6, 'normal', SLATE_LT, 'right');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SECTION HEADING — all-caps label + hairline rule
+    // ─────────────────────────────────────────────────────────────
+    function sh(label, yPos) {
+      t(label.toUpperCase(), M, yPos, 7.5, 'bold', SLATE, 'left');
+      hl(yPos + 2, M, M + CW, RULE, 0.35);
+      return yPos + 7;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TABLE HELPERS — no vertical borders, zebra rows, hairlines
+    // colDefs: [{ label, w, align? }]
+    // ─────────────────────────────────────────────────────────────
+    function tHead(cols, x, yPos, rh = 6.5) {
+      fill(x, yPos, CW, rh, ZEBRA);
+      hl(yPos + rh, x, x + CW, RULE, 0.3);
+      let cx = x + 3;
+      cols.forEach(c => {
+        t(c.label.toUpperCase(), cx, yPos + rh * 0.72, 6, 'bold', SLATE_LT, c.align || 'left');
+        cx += c.w;
+      });
+      return yPos + rh;
+    }
+    function tRow(cells, cols, x, yPos, rh = 8, ri = 0) {
+      if (ri % 2 !== 0) fill(x, yPos, CW, rh, ZEBRA);
+      hl(yPos + rh, x, x + CW, RULE, 0.2);
+      let cx = x + 3;
+      cells.forEach((cell, i) => {
+        const col = cols[i] || {};
+        const al  = cell.align || col.align || 'left';
+        const tx  = al === 'right'  ? cx + col.w - 4 :
+                    al === 'center' ? cx + col.w / 2  : cx;
+        const by  = yPos + rh * 0.65;   // consistent baseline ~65% down the row
+        if (cell.mark) {
+          statusMark(cx, by, cell.text);
+        } else if (cell.badgePill) {
+          pill(cx + (cell.bw || 20) / 2, yPos + rh / 2,
+               String(cell.text), cell.bg, cell.fg, cell.bw || 20, 5.5);
+        } else {
+          t(String(cell.text ?? '—').substring(0, 48), tx, by,
+            8, cell.bold ? 'bold' : 'normal', cell.color || NAVY, al);
+        }
+        cx += col.w;
+      });
+      return yPos + rh;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // KV GRID CELL — used inside the 4-col summary grid
+    // Renders label (all-caps, small, slate) above value (bold navy)
+    // ─────────────────────────────────────────────────────────────
+    function kvCell(label, value, x, y, cellW) {
+      t(label.toUpperCase(), x, y, 6, 'normal', SLATE_LT, 'left');
+      const valStr = doc.splitTextToSize(String(value || '—'), cellW)[0] || '—';
+      t(valStr, x, y + 5.5, 8.5, 'bold', NAVY, 'left');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TOTAL PAGE COUNT
+    // ─────────────────────────────────────────────────────────────
+    const hasCmpRows  = cmpRows.length > 0;
+    const TOTAL_PAGES = hasCmpRows ? 6 : 5;
+
+    // ═════════════════════════════════════════════════════════════
+    // PAGE 1 — EXECUTIVE SUMMARY  (Supplier Showdown Cover)
+    // ═════════════════════════════════════════════════════════════
+    statusEl.textContent = 'Building cover page...';
+    await sleep(30);
+    fill(0, 0, W, H, WHITE);
+
+    // ── Compute per-supplier data ─────────────────────────────────
+    const supData = [];
+    for (let s = 1; s <= supplierCount; s++) {
+      const hand       = parseInt(document.getElementById(`sup${s}-hand`)?.value)       || 0;
+      const smell      = parseInt(document.getElementById(`sup${s}-smell`)?.value)      || 0;
+      const photomatch = parseInt(document.getElementById(`sup${s}-photomatch`)?.value) || 0;
+      const sizing     = parseInt(document.getElementById(`sup${s}-sizing`)?.value)     || 0;
+      const ratings    = [hand, smell, photomatch, sizing];
+      const avg        = ratings.reduce((a, b) => a + b, 0) / 4;
+      const fulfill    = document.getElementById(`sup-fulfill-${s}`)?.value || '—';
+      const price      = document.getElementById(`sup-price-${s}`)?.value  || '—';
+      const photo1     = STATE.photos[`sup${s}_photo1`];
+      supData.push({ s, hand, smell, photomatch, sizing, avg, fulfill, price, photo1 });
+    }
+    const winner = supData.length ? supData.reduce((a, b) => a.avg >= b.avg ? a : b) : { s: 1, avg: 0 };
+    const vc = vCfg();
+    const vpW = verdictVal === 'BACKUP ONLY' ? 34 : 26;
+
+    // ── Helper: 5-star rating (vector polygon stars) ─────────────
+    // gap / outer / inner accept optional overrides for adaptive sizing
+    function stars5(rating, leftX, cy, activeC, gap = 6.8, outer = 2.6, inner = 1.05) {
+      for (let i = 1; i <= 5; i++) {
+        const cx  = leftX + (i - 1) * gap + outer;
+        const col = i <= rating ? activeC : RULE;
+        const pts = [];
+        for (let j = 0; j < 10; j++) {
+          const angle = (j * Math.PI / 5) - Math.PI / 2;
+          const r     = j % 2 === 0 ? outer : inner;
+          pts.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
+        }
+        const segs = [];
+        for (let j = 1; j < pts.length; j++) {
+          segs.push([pts[j][0] - pts[j-1][0], pts[j][1] - pts[j-1][1]]);
+        }
+        doc.setFillColor(...col);
+        doc.lines(segs, pts[0][0], pts[0][1], [1, 1], 'F', true);
+      }
+    }
+
+    // ── Solid navy header bar ─────────────────────────────────────
+    fill(0, 0, W, HEADER_H, NAVY);
+    t('AEM', M, HEADER_H - 3.5, 11, 'bold', WHITE, 'left');
+    t('QUALITY ASSURANCE REPORT', M + 16, HEADER_H - 3.5, 6, 'normal', [170, 180, 200], 'left');
+    t(getReportNumber(), W - M, HEADER_H - 3.5, 6.5, 'normal', [170, 180, 200], 'right');
+
+    // ── Hero headline ─────────────────────────────────────────────
+    let y = HEADER_H + 11;
+    t('THE SUPPLIER SHOWDOWN', M, y, 7.5, 'bold', SLATE_LT, 'left');
+    y += 8;
+    t(v('productName') || 'Quality Inspection', M, y, 22, 'bold', NAVY, 'left', CW);
+    y += 11;
+    const heroSub = [v('inspectionDate'), v('sampleSize') ? `Size ${v('sampleSize')}` : '', v('declaredMaterial')].filter(Boolean).join('  ·  ');
+    t(heroSub, M, y, 7, 'normal', SLATE_LT, 'left');
+    y += 5;
+    hl(y, M, M + CW, RULE, 0.5);
+    y += 8;
+
+    // ── 1 of 3 — Standardizing Rating Profile Table ──────────────
+    t('STANDARDIZING RATING PROFILE', M, y, 8, 'bold', SLATE, 'left');
+    y += 6;
+
+    const scorecardMetrics = [
+      { id: 'hand',       label: 'Hand Feel' },
+      { id: 'smell',      label: 'Smell' },
+      { id: 'photomatch', label: 'Photo Match' },
+      { id: 'sizing',     label: 'Sizing Consistency' },
+    ];
+
+    // Shrink the metric label column as supplier count grows so each
+    // supplier column stays wide enough to render stars without overlap
+    const metricColW = Math.max(26, 52 - Math.max(0, supData.length - 2) * 7);
+    const supColW    = supData.length ? (CW - metricColW) / supData.length : CW - metricColW;
+    const scTH = 8, scRH = 12;
+
+    // Compute star geometry that always fits inside supColW (6 mm padding total)
+    const STAR_NAT_W = 4 * 6.8 + 2 * 2.6;          // natural 5-star width ≈ 32.4 mm
+    const starAvail  = supColW - 6;
+    const starScale  = starAvail < STAR_NAT_W ? starAvail / STAR_NAT_W : 1;
+    const sGAP = 6.8 * starScale, sOUTER = 2.6 * starScale, sINNER = 1.05 * starScale;
+    const starW = 4 * sGAP + 2 * sOUTER;
+
+    const yTableTop = y; // used later to draw full-height column separator lines
+
+    // Table header row (navy)
+    fill(M, y, CW, scTH, NAVY, 2);
+    t('METRIC', M + 3, y + scTH * 0.7, 5.5, 'bold', WHITE, 'left');
+    supData.forEach((sup, si) => {
+      const cx     = M + metricColW + si * supColW + supColW / 2;
+      const supLbl = supData.length >= 4 ? `SUP. ${sup.s}` : `SUPPLIER ${sup.s}`;
+      t(supLbl, cx, y + scTH * 0.7, 5.5, 'bold', WHITE, 'center');
+    });
+    y += scTH;
+
+    // Metric rows
+    scorecardMetrics.forEach((m, ri) => {
+      if (ri % 2 === 0) fill(M, y, CW, scRH, ZEBRA);
+      hl(y + scRH, M, M + CW, RULE, 0.2);
+      t(m.label, M + 3, y + scRH * 0.68, 7, 'normal', SLATE, 'left');
+      supData.forEach((sup, si) => {
+        const rating   = sup[m.id] || 0;
+        const colX     = M + metricColW + si * supColW;
+        const starLeft = colX + (supColW - starW) / 2;
+        stars5(rating, starLeft, y + scRH / 2, rating >= 4 ? [218, 165, 32] : [180, 180, 180],
+               sGAP, sOUTER, sINNER);
+      });
+      y += scRH;
+    });
+
+    // Fulfillment row (index 4 → even → zebra stripe)
+    fill(M, y, CW, scRH, ZEBRA);
+    hl(y + scRH, M, M + CW, RULE, 0.2);
+    t('Fulfillment Time', M + 3, y + scRH * 0.68, 7, 'normal', SLATE, 'left');
+    supData.forEach((sup, si) => {
+      const colX = M + metricColW + si * supColW;
+      t(sup.fulfill, colX + supColW / 2, y + scRH * 0.68, 7, 'normal', SLATE, 'center');
+    });
+    y += scRH;
+
+    // Number of defects row (index 5 → odd → plain, count from defect log)
+    const defectsPerSup = {};
+    getDefects().forEach(d => {
+      if (d.supplier !== '—') {
+        const sNum = parseInt(d.supplier.replace('Supplier ', ''));
+        if (!isNaN(sNum)) defectsPerSup[sNum] = (defectsPerSup[sNum] || 0) + 1;
+      }
+    });
+    hl(y + scRH, M, M + CW, RULE, 0.2);
+    t('No. of Defects', M + 3, y + scRH * 0.68, 7, 'normal', SLATE, 'left');
+    supData.forEach((sup, si) => {
+      const colX  = M + metricColW + si * supColW;
+      const count = defectsPerSup[sup.s] || 0;
+      t(String(count), colX + supColW / 2, y + scRH * 0.68, 8, 'bold',
+        count > 0 ? [220, 38, 38] : [21, 128, 61], 'center');
+    });
+    y += scRH;
+
+    // Overall avg row — always the LAST row of the table (highlighted)
+    fill(M, y, CW, scRH + 2, [234, 237, 243]);
+    hl(y + scRH + 2, M, M + CW, NAVY, 0.4);
+    t('OVERALL AVG', M + 3, y + (scRH + 2) * 0.68, 7, 'bold', NAVY, 'left');
+    supData.forEach((sup, si) => {
+      const colX = M + metricColW + si * supColW;
+      const isWin = sup.s === winner.s && winner.avg > 0;
+      t(sup.avg.toFixed(1) + ' / 5', colX + supColW / 2, y + (scRH + 2) * 0.68, 8, 'bold',
+        isWin ? G_DARK : SLATE, 'center');
+      if (isWin) t('BEST', colX + supColW / 2 + 18, y + (scRH + 2) * 0.68, 5.5, 'bold', G_DARK, 'left');
+    });
+    y += scRH + 2 + 8;
+
+    // Vertical column separators spanning full table height
+    if (supData.length > 1) {
+      doc.setDrawColor(180, 186, 194);
+      doc.setLineWidth(0.3);
+      for (let si = 1; si < supData.length; si++) {
+        const sepX = M + metricColW + si * supColW;
+        doc.line(sepX, yTableTop, sepX, y - 8);
+      }
+    }
+
+    // ── 2 of 3 — Lead sample photos strip ────────────────────────
+    // Reserve 44 mm at the bottom for the recommendation box
+    const REC_RESERVE = 44;
+    const stripAvail  = H - FOOTER_H - 4 - y - REC_RESERVE;
+    if (stripAvail > 20 && supData.some(s => s.photo1)) {
+      t('LEAD SAMPLES', M, y, 6, 'bold', SLATE_LT, 'left');
+      y += 5;
+      const sColW = supData.length ? CW / supData.length : CW;
+      const sImgH = Math.min(stripAvail - 12, 50);
+      supData.forEach((sup, si) => {
+        const px = M + si * sColW;
+        fill(px, y, sColW - 3, sImgH, ZEBRA, 2);
+        stroke(px, y, sColW - 3, sImgH, RULE, 0.25, 2);
+        if (sup.photo1) {
+          imgFit(sup.photo1, px, y, sColW - 3, sImgH);
+          stroke(px, y, sColW - 3, sImgH, RULE, 0.25, 2);
+        }
+        t(`SUPPLIER ${sup.s}`, px + (sColW - 3) / 2, y + sImgH + 4, 6, 'bold', SLATE_LT, 'center');
+      });
+      y += sImgH + 12;
+    }
+
+    // ── 3 of 3 — Recommendation box ──────────────────────────────
+    const recBoxH = 30;
+    fill(M, y, CW, recBoxH, [245, 247, 250], 3);
+    stroke(M, y, CW, recBoxH, RULE, 0.4, 3);
+    fill(M, y, 3, recBoxH, NAVY, 0);          // left accent bar
+    t('RECOMMENDATION', M + 8, y + 7, 6, 'bold', SLATE_LT, 'left');
+    const notes = v('inspectorNotes');
+    const recText = notes ||
+      (winner.avg > 0
+        ? `After testing ${supplierCount} supplier${supplierCount > 1 ? 's' : ''}, we recommend proceeding with Supplier ${winner.s} based on overall quality scores.`
+        : 'Complete supplier ratings to generate a recommendation.');
+    // Draw pill first so its label is always visible on top
+    pill(M + CW - vpW / 2 - 4, y + recBoxH / 2, vc.label, vc.bg, vc.fg, vpW, 7);
+    // Hard-cap text at 57 % of box width — leaves a clear open zone for the pill
+    const recTextMaxW = Math.round(CW * 0.57);
+    const recLines = doc.splitTextToSize(recText, recTextMaxW);
+    recLines.slice(0, 2).forEach((ln, li) => t(ln, M + 8, y + 15 + li * 5.5, 8.5, 'normal', NAVY, 'left'));
+
+    // ── Cover footer ──────────────────────────────────────────────
+    hl(H - FOOTER_H, 0, W, RULE, 0.3);
+    t('AEM Quality Assurance  ·  Supplier Showdown', M, H - 3, 6, 'normal', SLATE_LT, 'left');
+    t(`1 / ${TOTAL_PAGES}`, W - M, H - 3, 6, 'normal', SLATE_LT, 'right');
+
+    // ═════════════════════════════════════════════════════════════
+    // PAGE 2 — SUPPLIER TO SUPPLIER COMPARISON  (conditional)
+    // ═════════════════════════════════════════════════════════════
+    let docPage = 1;
+    if (hasCmpRows) {
+      statusEl.textContent = 'Building supplier comparison...';
+      await sleep(30);
+      doc.addPage(); docPage++;
+      chrome('Supplier Comparison', docPage, TOTAL_PAGES);
+      y = BODY_TOP + 4;
+
+      // Title block
+      t('VISUAL COMPARISON', M, y, 7, 'bold', SLATE_LT, 'left');
+      y += 7;
+      t('Supplier to Supplier Comparison', M, y, 18, 'bold', NAVY, 'left');
+      y += 10;
+      hl(y, M, M + CW, RULE, 0.5);
+      y += 8;
+
+      // Column layout
+      const CMP_LABEL_W = 34;
+      const cmpNCols    = supData.length || 1;
+      const cmpPColW    = (CW - CMP_LABEL_W - 2) / cmpNCols;
+      const CMP_PHOTO_H = 54;
+      const CMP_ROW_GAP = 5;
+
+      // Header row
+      fill(M, y, CMP_LABEL_W, 11, NAVY, 2);
+      t('VIEW / ANGLE', M + CMP_LABEL_W / 2, y + 7.5, 5.5, 'bold', WHITE, 'center');
+      supData.forEach((sup, si) => {
+        const cx  = M + CMP_LABEL_W + 2 + si * cmpPColW;
+        const cw  = cmpPColW - 1;
+        const lbl = cmpNCols >= 4 ? `SUP. ${sup.s}` : `SUPPLIER ${sup.s}`;
+        fill(cx, y, cw, 11, NAVY, 2);
+        t(lbl, cx + cw / 2, y + 7.5, 5.5, 'bold', WHITE, 'center');
+      });
+      y += 13;
+
+      // One row per comparison entry
+      for (const row of cmpRows) {
+        const ROW_STEP = CMP_PHOTO_H + CMP_ROW_GAP;
+        if (y + ROW_STEP > BODY_BOT) {
+          doc.addPage(); docPage++;
+          chrome('Supplier Comparison (cont.)', docPage, TOTAL_PAGES);
+          y = BODY_TOP + 4;
+        }
+
+        // View-name label cell (left column)
+        fill(M, y, CMP_LABEL_W, CMP_PHOTO_H, ZEBRA, 2);
+        stroke(M, y, CMP_LABEL_W, CMP_PHOTO_H, RULE, 0.25, 2);
+        const viewName  = row.name.trim() || 'View';
+        const nameLines = doc.splitTextToSize(viewName, CMP_LABEL_W - 4);
+        const nameStartY = y + CMP_PHOTO_H / 2 - (nameLines.length * 5.5) / 2 + 3.5;
+        nameLines.forEach((ln, li) => t(ln, M + CMP_LABEL_W / 2, nameStartY + li * 5.5, 7, 'bold', NAVY, 'center'));
+
+        // Photo cell per supplier
+        supData.forEach((sup, si) => {
+          const cx    = M + CMP_LABEL_W + 2 + si * cmpPColW;
+          const cw    = cmpPColW - 1;
+          const entry = STATE.photos[`cmp_${row.id}_sup${sup.s}`];
+          fill(cx, y, cw, CMP_PHOTO_H, ZEBRA, 2);
+          stroke(cx, y, cw, CMP_PHOTO_H, RULE, 0.25, 2);
+          if (entry) {
+            imgFit(entry, cx, y, cw, CMP_PHOTO_H);
+            stroke(cx, y, cw, CMP_PHOTO_H, RULE, 0.25, 2);
+          } else {
+            t('\u2014', cx + cw / 2, y + CMP_PHOTO_H / 2 + 2, 10, 'normal', RULE, 'center');
+          }
+        });
+        y += ROW_STEP;
+      }
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // PAGE 2 or 3 — TRUE TO SIZE  (Stacked Overlay + Fit Notes)
+    // ═════════════════════════════════════════════════════════════
+    statusEl.textContent = 'Building True to Size page...';
+    await sleep(30);
+    doc.addPage(); docPage++;
+    chrome('True to Size', docPage, TOTAL_PAGES);
+    y = BODY_TOP + 4;
+
+    // Section eyebrow + hero title
+    t('FIT CONSISTENCY', M, y, 7, 'bold', SLATE_LT, 'left');
+    y += 7;
+    t('True to Size', M, y, 20, 'bold', NAVY, 'left');
+    y += 11;
+    hl(y, M, M + CW, RULE, 0.5);
+    y += 8;
+
+    // Stacked garment photo (large focal image)
+    const ttsPhoto  = STATE.photos['tts_stacked'];
+    const ttsImgH   = 82;
+    const ttsImgW   = CW;
+    fill(M, y, ttsImgW, ttsImgH, ZEBRA, 3);
+    stroke(M, y, ttsImgW, ttsImgH, RULE, 0.35, 3);
+    if (ttsPhoto) {
+      imgFit(ttsPhoto, M, y, ttsImgW, ttsImgH);
+      stroke(M, y, ttsImgW, ttsImgH, RULE, 0.35, 3);
+    } else {
+      t('No stacked overlay photo uploaded', W / 2, y + ttsImgH / 2 + 2, 8, 'normal', SLATE_LT, 'center');
+      t('Upload a stacked garment photo in Section 5 of the form', W / 2, y + ttsImgH / 2 + 9, 6.5, 'normal', SLATE_LT, 'center');
+    }
+    // Caption label
+    t('STACKED OVERLAY \u2014 ALL SUPPLIER SAMPLES', M, y + ttsImgH + 5, 5.5, 'bold', SLATE_LT, 'left');
+    y += ttsImgH + 14;
+
+    // Sizing & fit notes box
+    const sNotes = v('sizingNotes') || 'No fit notes entered for this inspection.';
+    y = sh('Sizing & Fit Notes', y);
+    const sLines = doc.splitTextToSize(sNotes, CW - 16);
+    const sBoxH  = Math.max(22, sLines.length * 6 + 12);
+    fill(M, y, CW, sBoxH, [245, 247, 250], 3);
+    stroke(M, y, CW, sBoxH, RULE, 0.3, 3);
+    fill(M, y, 3, sBoxH, NAVY, 0);   // left accent bar
+    sLines.slice(0, 5).forEach((ln, li) => t(ln, M + 8, y + 9 + li * 6, 8.5, 'normal', NAVY, 'left'));
+    y += sBoxH + 10;
+
+    // Per-supplier sizing summary (hand-feel + sizing scores)
+    if (supData.length && y + 40 < BODY_BOT) {
+      y = sh('Sizing Consistency by Supplier', y);
+      const szCols = [
+        { label: 'Supplier',           w: 40 },
+        { label: 'Sizing Score',       w: 40 },
+        { label: 'Fulfillment Time',   w: 50 },
+        { label: 'Unit Price',         w: 52 },
+      ];
+      y = tHead(szCols, M, y, 7);
+      supData.forEach((sup, ri) => {
+        const isWin = sup.s === winner.s && winner.avg > 0;
+        if (isWin) fill(M, y, CW, 10, [220, 252, 231]);
+        else if (ri % 2 !== 0) fill(M, y, CW, 10, ZEBRA);
+        hl(y + 10, M, M + CW, RULE, 0.2);
+        let cx = M + 3;
+        const szCells = [
+          { text: `Supplier ${sup.s}`, bold: isWin, color: isWin ? G_DARK : NAVY },
+          { text: `${sup.sizing || 0}/5`,    color: (sup.sizing || 0) >= 4 ? G_DARK : SLATE },
+          { text: sup.fulfill,               color: SLATE },
+          { text: sup.price,                 color: SLATE },
+        ];
+        szCells.forEach((cell, ci) => {
+          t(String(cell.text), cx, y + 7, 7.5, cell.bold ? 'bold' : 'normal', cell.color || NAVY, 'left');
+          cx += szCols[ci].w;
+        });
+        if (isWin) t('TOP PICK', M + CW - 3, y + 7, 6, 'bold', G_DARK, 'right');
+        y += 10;
+      });
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // PAGE 3+ — SPECIFICATIONS (Product Details + Measurements)
+    // Sections flow together; a new page is added only if content
+    // genuinely overflows — no forced breaks between sections.
+    // ═════════════════════════════════════════════════════════════
+    statusEl.textContent = 'Building inspection details...';
+    await sleep(30);
+    doc.addPage();
+    docPage++;
+    chrome('Specifications', docPage, TOTAL_PAGES);
+    y = BODY_TOP + 4;
+
+    // ── Product Details ──────────────────────────────────────────
+    y = sh('Product Details', y);
+    const p2fields = [
+      ['Product Name',       v('productName')],
+      ['Supplier Link',      v('productUrl')],
+      ['Declared Material',  v('declaredMaterial')],
+      ['Sample Size Tested', v('sampleSize')],
+      ['Inspection Date',    v('inspectionDate')],
+      ['Report Number',      getReportNumber()],
+    ];
+    const RH2 = 10;
+    p2fields.forEach((f, i) => {
+      if (i % 2 !== 0) fill(M, y, CW, RH2, ZEBRA);
+      hl(y + RH2, M, M + CW, RULE, 0.2);
+      const mid = y + RH2 * 0.65;
+      t(f[0], M + 3, mid, 7, 'normal', SLATE_LT, 'left');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...NAVY);
+      const val62 = doc.splitTextToSize(String(f[1] || '—'), CW * 0.62)[0] || '—';
+      doc.text(val62, M + CW - 3, mid, { align: 'right' });
+      y += RH2;
+    });
+
+    // ── Size Measurements ─────────────────────────────────────────
+    // Estimated height: section header ~10 + table header ~8 + 4 rows×9 = ~54mm
+    y += 6;
+    if (y + 54 > BODY_BOT) {
+      doc.addPage(); docPage++;
+      chrome('Specifications', docPage, TOTAL_PAGES);
+      y = BODY_TOP + 4;
+    }
+    y = sh('Dimensional Inspection', y);
+    const mCols = [
+      { label: 'Measurement Point', w: 54 },
+      { label: 'Spec (cm)',         w: 26 },
+      { label: 'Actual (cm)',       w: 26 },
+      { label: 'Deviation',         w: 26 },
+      { label: 'QC Status',         w: 34 },
+    ];
+    y = tHead(mCols, M, y);
+    getMeasurements().forEach((m, i) => {
+      const dCol    = m.status === 'PASS' ? G_DARK : m.status === 'FAIL' ? R_DARK : SLATE_LT;
+      const stBg    = m.status === 'PASS' ? G_BG : m.status === 'FAIL' ? R_BG : ZEBRA;
+      const stFg    = m.status === 'PASS' ? G_DARK : m.status === 'FAIL' ? R_DARK : SLATE_LT;
+      const stLabel = m.status === 'PASS' ? 'QC PASS' : m.status === 'FAIL' ? 'QC FAIL' : '\u2014';
+      y = tRow([
+        { text: m.point },
+        { text: m.spec,      color: SLATE },
+        { text: m.actual,    color: NAVY  },
+        { text: m.deviation, color: dCol, bold: true },
+        { badgePill: true, text: stLabel, bg: stBg, fg: stFg, bw: 26 },
+      ], mCols, M, y, 10, i);
+    });
+
+    // ═════════════════════════════════════════════════════════════
+    // DEFECT LOG
+    // ═════════════════════════════════════════════════════════════
+    statusEl.textContent = 'Building defect log...';
+    await sleep(30);
+    doc.addPage(); docPage++;
+    chrome('Defect Log', docPage, TOTAL_PAGES);
+    y = BODY_TOP + 4;
+    y = sh('Defect Register', y);
+
+    const defects  = getDefects();
+    const dSum     = { Critical: 0, Major: 0, Minor: 0 };
+    defects.forEach(d => { if (dSum[d.severity] !== undefined) dSum[d.severity]++; });
+
+    // Summary pills
+    [
+      [`Critical: ${dSum.Critical}`, R_BG, R_DARK, 32],
+      [`Major: ${dSum.Major}`,        A_BG, A_DARK, 28],
+      [`Minor: ${dSum.Minor}`,        ZEBRA, SLATE,  26],
+      [`Total: ${defects.length}`,    B_BG,  B_DARK, 26],
+    ].reduce((bx, [lbl, bg, fg, pw]) => {
+      pill(bx + pw / 2, y + 4, lbl, bg, fg, pw, 7);
+      return bx + pw + 5;
+    }, M);
+    y += 14;
+
+    if (!defects.length) {
+      t('No defects logged for this inspection.', W / 2, y + 10, 9, 'normal', SLATE_LT, 'center');
+    } else {
+      const dCols = [
+        { label: '#',           w:  8 },
+        { label: 'Description', w: 54 },
+        { label: 'Location',    w: 32 },
+        { label: 'Severity',    w: 28 },
+        { label: 'Status',      w: 28 },
+        { label: 'Supplier',    w: 32 },
+      ];
+      y = tHead(dCols, M, y);
+      defects.forEach((d, i) => {
+        const sBg = d.severity==='Critical' ? R_BG : d.severity==='Major' ? A_BG : ZEBRA;
+        const sFg = d.severity==='Critical' ? R_DARK : d.severity==='Major' ? A_DARK : SLATE;
+        y = tRow([
+          { text: d.num, color: SLATE_LT },
+          { text: d.description },
+          { text: d.location, color: SLATE },
+          { badgePill: true, text: d.severity, bg: sBg, fg: sFg, bw: 24 },
+          { text: d.status, color: SLATE },
+          { text: d.supplier, color: SLATE },
+        ], dCols, M, y, 9, i);
+      });
+
+      // ── Defect Photo Evidence ──────────────────────────────────
+      const defectsWithPhotos = defects.filter(d => d.photoKeys.some(k => STATE.photos[k]));
+      if (defectsWithPhotos.length > 0) {
+        y += 8;
+        if (y + 20 > BODY_BOT) {
+          doc.addPage(); docPage++;
+          chrome('Defect Log', docPage, TOTAL_PAGES);
+          y = BODY_TOP + 4;
+        }
+        y = sh('Defect Photo Evidence', y);
+
+        const DPHOTO_H   = 38;
+        const DPHOTO_GAP = 3;
+        const DPHOTO_W   = (CW - DPHOTO_GAP * 3) / 4;
+
+        defectsWithPhotos.forEach(d => {
+          const BLOCK_H = 10 + DPHOTO_H + 14;
+          if (y + BLOCK_H > BODY_BOT) {
+            doc.addPage(); docPage++;
+            chrome('Defect Log', docPage, TOTAL_PAGES);
+            y = BODY_TOP + 4;
+          }
+
+          // Defect mini-header
+          const hBg = d.severity === 'Critical' ? R_BG : d.severity === 'Major' ? A_BG : ZEBRA;
+          const hFg = d.severity === 'Critical' ? R_DARK : d.severity === 'Major' ? A_DARK : SLATE;
+          fill(M, y, CW, 8, hBg, 1);
+          t(`DEFECT #${d.num}  ·  ${d.description}`.substring(0, 65), M + 4, y + 5.5, 7, 'bold', hFg, 'left');
+          t(d.supplier, M + CW - 4, y + 5.5, 6.5, 'normal', hFg, 'right');
+          y += 10;
+
+          // 4 photo slots
+          for (let pi = 0; pi < 4; pi++) {
+            const px    = M + pi * (DPHOTO_W + DPHOTO_GAP);
+            const entry = STATE.photos[d.photoKeys[pi]];
+            fill(px, y, DPHOTO_W, DPHOTO_H, ZEBRA, 2);
+            stroke(px, y, DPHOTO_W, DPHOTO_H, RULE, 0.25, 2);
+            if (entry) {
+              imgFit(entry, px, y, DPHOTO_W, DPHOTO_H);
+              stroke(px, y, DPHOTO_W, DPHOTO_H, RULE, 0.25, 2);
+            } else {
+              t('—', px + DPHOTO_W / 2, y + DPHOTO_H / 2 + 2, 8, 'normal', RULE, 'center');
+            }
+            t(`Photo ${pi + 1}`, px + DPHOTO_W / 2, y + DPHOTO_H + 4, 5.5, 'normal', SLATE_LT, 'center');
+          }
+          y += DPHOTO_H + 14;
+        });
+      }
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // PAGE N — FINAL RECOMMENDATION & CTA
+    // ═════════════════════════════════════════════════════════════
+    statusEl.textContent = 'Building final recommendation...';
+    await sleep(30);
+    doc.addPage(); docPage++;
+    chrome('Final Recommendation', docPage, TOTAL_PAGES);
+    y = BODY_TOP + 4;
+
+    // ── Large verdict stamp ───────────────────────────────────────
+    const stampW = 90, stampH = 28;
+    fill(W / 2 - stampW / 2, y, stampW, stampH, vc.bg, 4);
+    stroke(W / 2 - stampW / 2, y, stampW, stampH, vc.fg, 0.8, 4);
+    t(vc.label, W / 2, y + stampH * 0.42, 20, 'bold', vc.fg, 'center');
+    t('FOR BULK ORDER', W / 2, y + stampH * 0.78, 7, 'bold', vc.fg, 'center');
+    y += stampH + 10;
+
+    // ── Recommendation text ───────────────────────────────────────
+    y = sh('Our Recommendation', y);
+    const finalNotes = v('inspectorNotes');
+    const winnerPrice = winner.avg > 0 ? (supData.find(s => s.s === winner.s)?.price || '') : '';
+    const priceNote   = winnerPrice && winnerPrice !== '—' ? ` at ${winnerPrice} per unit` : '';
+    const loserPrices = supData.filter(s => s.s !== winner.s && s.price && s.price !== '—');
+    const valueNote   = loserPrices.length ? ` While ${loserPrices.map(s => `Supplier ${s.s} costs ${s.price}`).join(' and ')}, the superior quality from Supplier ${winner.s}${priceNote} significantly reduces return risk and upholds brand standards.` : (priceNote ? ` Supplier ${winner.s} is priced${priceNote}.` : '');
+    const finalText  = finalNotes ||
+      (winner.avg > 0
+        ? `After a thorough assessment of ${supplierCount} supplier${supplierCount > 1 ? 's' : ''}, Supplier ${winner.s} achieved the highest overall quality score of ${winner.avg.toFixed(1)}/5.${valueNote} We recommend proceeding with Supplier ${winner.s} for your bulk order.`
+        : 'Please complete all supplier ratings to generate a detailed recommendation.');
+    fill(M, y, CW, 32, [245, 247, 250], 3);
+    stroke(M, y, CW, 32, RULE, 0.3, 3);
+    fill(M, y, 3, 32, NAVY, 0);
+    const finalLines = doc.splitTextToSize(finalText, CW - 14);
+    finalLines.slice(0, 4).forEach((ln, li) => t(ln, M + 8, y + 8 + li * 6, 8.5, 'normal', NAVY, 'left'));
+    y += 38;
+
+    // ── Supplier comparison summary table ─────────────────────────
+    y = sh('Supplier Summary', y);
+    const sumCols = [
+      { label: 'Supplier',    w: 26 },
+      { label: 'Hand Feel',   w: 24 },
+      { label: 'Smell',       w: 22 },
+      { label: 'Photo Match', w: 26 },
+      { label: 'Sizing',      w: 22 },
+      { label: 'Avg',         w: 18 },
+      { label: 'Fulfillment', w: 26 },
+      { label: 'Price',       w: 22 },
+    ];
+    y = tHead(sumCols, M, y, 7);
+    supData.forEach((sup, ri) => {
+      const isWin = sup.s === winner.s && winner.avg > 0;
+      if (isWin) fill(M, y, CW, 10, [220, 252, 231]);
+      else if (ri % 2 !== 0) fill(M, y, CW, 10, ZEBRA);
+      hl(y + 10, M, M + CW, RULE, 0.2);
+      const cells = [
+        { text: `Supplier ${sup.s}`, bold: isWin, color: isWin ? G_DARK : NAVY },
+        { text: `${sup.hand}/5`,       color: sup.hand >= 4 ? G_DARK : SLATE },
+        { text: `${sup.smell}/5`,      color: sup.smell >= 4 ? G_DARK : SLATE },
+        { text: `${sup.photomatch}/5`, color: sup.photomatch >= 4 ? G_DARK : SLATE },
+        { text: `${sup.sizing}/5`,     color: sup.sizing >= 4 ? G_DARK : SLATE },
+        { text: sup.avg.toFixed(1),    bold: true, color: isWin ? G_DARK : NAVY },
+        { text: sup.fulfill,           color: SLATE },
+        { text: sup.price,             color: SLATE },
+      ];
+      let cx = M + 3;
+      cells.forEach((cell, ci) => {
+        const col = sumCols[ci];
+        t(String(cell.text), cx, y + 7, 7.5, cell.bold ? 'bold' : 'normal', cell.color || NAVY, 'left');
+        cx += col.w;
+      });
+      if (isWin) t('RECOMMENDED', M + CW - 3, y + 7, 6, 'bold', G_DARK, 'right');
+      y += 10;
+    });
+    y += 10;
+
+    // ── CTA button bar ────────────────────────────────────────────
+    const ctaH = 20;
+    const ctaY = Math.min(y + 10, BODY_BOT - ctaH - 10);
+    fill(M, ctaY, CW, ctaH, NAVY, 3);
+    const ctaWinner = winner.avg > 0 ? `Supplier ${winner.s}` : 'your chosen supplier';
+    t(`REPLY TO APPROVE ${ctaWinner.toUpperCase()} FOR BULK ORDER`, W / 2, ctaY + ctaH * 0.62, 9, 'bold', WHITE, 'center');
+    t(v('inspectionDate'), W / 2, ctaY + ctaH * 0.85, 6, 'normal', [170, 180, 200], 'center');
+
+    // ── Sign-off ──────────────────────────────────────────────────
+    y = ctaY + ctaH + 12;
+    if (y + 14 < BODY_BOT) {
+      hl(y + 13, M + CW - 48, M + CW, SLATE_LT, 0.4);
+      t('Signature', M + CW - 24, y + 15.5, 6, 'normal', SLATE_LT, 'center');
+      t(`Report: ${getReportNumber()}`, M, y + 7, 7, 'normal', SLATE_LT, 'left');
+      t(v('inspectionDate'), M, y + 13, 7, 'normal', SLATE_LT, 'left');
+    }
+
+    // ── Save ──────────────────────────────────────────────────────
+    statusEl.textContent = 'Saving PDF...';
+    await sleep(50);
+    const filename = `${getReportNumber()}_${v('productName').replace(/[^a-z0-9]/gi,'_').substring(0,30)}.pdf`;
+    doc.save(filename);
+
+    incrementReportNumber();
+    initReportNumber();
+    overlay.classList.remove('active');
+    showToast('Report generated successfully!', 'success');
+
+  } catch (err) {
+    overlay.classList.remove('active');
+    console.error(err);
+    showToast('Error generating PDF: ' + err.message);
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ===== FILL WITH RANDOM DEMO DATA =====
+function fillRandomData() {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const randF = (min, max) => +(Math.random() * (max - min) + min).toFixed(1);
+  const randI = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // ── Section 1: Product Identity ──────────────────────────────
+  const products = [
+    'Merino Wool Blazer', 'French Terry Hoodie', 'Stretch Chino Trousers',
+    'Linen Dress Shirt', 'Bamboo Crew-Neck Tee', 'Ponte Midi Skirt',
+    'Ripstop Cargo Shorts', 'Cashmere Turtleneck', 'Organic Cotton Joggers',
+    'Viscose Wrap Dress', 'Heavyweight Fleece Sweatshirt', 'Technical Running Shorts'
+  ];
+  const materials = [
+    '100% Merino Wool', '60% Cotton / 40% Polyester', '95% Viscose / 5% Elastane',
+    '55% Linen / 45% Cotton', '80% Bamboo / 20% Spandex', '70% Wool / 30% Cashmere',
+    '98% Organic Cotton / 2% Lycra', '100% Recycled Polyester',
+    '65% Polyester / 35% Rayon', '88% Nylon / 12% Elastane'
+  ];
+  const supplierUrls = [
+    'https://detail.1688.com/offer/789456123.html',
+    'https://detail.1688.com/offer/654321987.html',
+    'https://detail.1688.com/offer/112233445566.html',
+    'https://www.alibaba.com/product/merino-blazer_60012345.html',
+  ];
+  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+  document.getElementById('productName').value       = pick(products);
+  document.getElementById('productUrl').value        = pick(supplierUrls);
+  document.getElementById('declaredMaterial').value  = pick(materials);
+  document.getElementById('sampleSize').value        = pick(sizes);
+  document.getElementById('inspectionDate').value    = new Date().toISOString().split('T')[0];
+  // Trigger validation highlight
+  ['productName','productUrl','declaredMaterial','sampleSize','inspectionDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.dispatchEvent(new Event('input')); el.dispatchEvent(new Event('change')); }
+  });
+
+  // ── Section 2: Size Measurements ─────────────────────────────
+  const specBases = [98, 44, 72, 62]; // chest, shoulder, length, sleeve
+  MEASURE_POINTS.forEach((pt, i) => {
+    const spec   = +(specBases[i] + randF(-3, 3)).toFixed(1);
+    const actual = +(spec + randF(-2.5, 2.5)).toFixed(1);
+    document.querySelector(`input[data-row="${i}"][data-col="spec"]`).value   = spec;
+    document.querySelector(`input[data-row="${i}"][data-col="actual"]`).value = actual;
+    calcDeviation(i);
+  });
+
+  // ── Section 3: Defect Log ─────────────────────────────────────
+  // Clear all existing defect rows first
+  document.getElementById('defectBody').innerHTML = '';
+  defectCount = 0;
+
+  const defectPool = [
+    { desc: 'Loose thread at hem',                loc: 'Bottom hem',         sev: 'Minor',    stat: 'Fixable'     },
+    { desc: 'Uneven stitching on side seam',      loc: 'Right side seam',    sev: 'Major',    stat: 'Fixable'     },
+    { desc: 'Colour bleed detected after wash',   loc: 'Back panel',         sev: 'Critical', stat: 'Not Fixable' },
+    { desc: 'Button misaligned by 4 mm',          loc: 'Front placket',      sev: 'Minor',    stat: 'Fixable'     },
+    { desc: 'Pilling on surface after 10 washes', loc: 'Chest area',         sev: 'Major',    stat: 'Not Fixable' },
+    { desc: 'Label stitching coming loose',       loc: 'Interior neck label', sev: 'Minor',   stat: 'Fixable'     },
+    { desc: 'Snap button not closing properly',   loc: 'Left cuff',          sev: 'Critical', stat: 'Fixable'     },
+  ];
+
+  const numDefects = randI(1, Math.min(4, defectPool.length));
+  const chosenDefects = [...defectPool].sort(() => Math.random() - 0.5).slice(0, numDefects);
+
+  chosenDefects.forEach(defect => {
+    addDefectRow(); // creates row with id = defectCount
+    const id  = defectCount;
+    const row = document.getElementById(`defect-row-${id}`);
+    const inputs  = row.querySelectorAll('input[type="text"]');
+    const selects = row.querySelectorAll('select');
+    inputs[0].value  = defect.desc;
+    inputs[1].value  = defect.loc;
+    selects[0].value = defect.sev;
+    selects[1].value = defect.stat;
+    // Assign to a random supplier
+    if (selects[2] && supplierCount >= 1) {
+      selects[2].value = String(randI(1, supplierCount));
+    }
+  });
+  updateDefectSummary();
+
+  // ── Section 4: Supplier Photos & Ratings ─────────────────────
+  const fulfillTimes = ['2–3 days', '3–5 days', '5–7 days', '7–10 days', '1–2 weeks'];
+  const prices       = ['$1.80', '$2.20', '$2.45', '$2.90', '$3.10', '$3.50', '$4.20'];
+
+  for (let s = 1; s <= supplierCount; s++) {
+    const fulfillEl = document.getElementById(`sup-fulfill-${s}`);
+    const priceEl   = document.getElementById(`sup-price-${s}`);
+    if (fulfillEl) fulfillEl.value = pick(fulfillTimes);
+    if (priceEl)   priceEl.value   = pick(prices);
+
+    // Star ratings (3–5 so results are always interesting)
+    ['smell', 'hand', 'photomatch', 'sizing'].forEach(metric => {
+      const rating    = randI(3, 5);
+      const container = document.getElementById(`sup${s}-${metric}-stars`);
+      const hidden    = document.getElementById(`sup${s}-${metric}`);
+      if (container && hidden) {
+        hidden.value = rating;
+        container.querySelectorAll('.star-btn').forEach((btn, idx) => {
+          btn.classList.toggle('active', idx < rating);
+        });
+      }
+    });
+  }
+
+  // ── Section 5: Sizing Notes ───────────────────────────────────
+  const sizingNotePool = [
+    'Supplier A runs 2 cm long in sleeve vs. Supplier B. All samples within ±1 cm at chest circumference.',
+    'Both suppliers hit spec within tolerance. Minor 0.5 cm deviation at shoulder width on Supplier 2.',
+    'Sizing consistency excellent across all suppliers. Garment length on Supplier 1 is 1.5 cm shorter than spec — request correction before bulk.',
+    'Sleeve length marginally long on Supplier 1 (+1.8 cm). Chest and shoulder measurements are consistent across all samples.',
+  ];
+  const sizingNotesEl = document.getElementById('sizingNotes');
+  if (sizingNotesEl) sizingNotesEl.value = pick(sizingNotePool);
+
+  // ── Section 6: Scores & Verdict ──────────────────────────────
+  SCORE_CATEGORIES.forEach(({ key, max }) => {
+    // Score between 65 % and 95 % of each category max
+    const score = Math.min(Math.round(max * (0.65 + Math.random() * 0.30)), max);
+    document.getElementById(`score-${key}`).value = score;
+  });
+  calcTotalScore();
+
+  // Weighted random verdict — mostly APPROVE so testing is quick
+  const verdictRoll = Math.random();
+  setVerdict(verdictRoll < 0.65 ? 'APPROVE' : verdictRoll < 0.90 ? 'BACKUP ONLY' : 'REJECT');
+
+  const notesPool = [
+    'Sample quality exceeds expectations. Fabric hand feel is excellent and construction is solid throughout. Ready for bulk.',
+    'Overall good quality. Minor stitching inconsistencies noted on one sample — request QC check before confirming bulk order.',
+    'Material composition confirmed via burn test. Sizing true to spec across all measurement points. Recommend proceeding with preferred supplier.',
+    'Strong contender. Weight and recovery excellent. Advise requesting pre-production sample before committing to full order.',
+  ];
+  document.getElementById('inspectorNotes').value = pick(notesPool);
+
+  // Final progress refresh
+  updateProgress();
+  showToast('✓ Demo data loaded — ready to generate!', 'success');
+}
+</script>
+</body>
+</html>
