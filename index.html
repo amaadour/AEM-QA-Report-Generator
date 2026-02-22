@@ -329,41 +329,6 @@ td input[type="number"] { padding: 7px 10px; font-size: 13px; }
 .badge-minor { background: rgba(126,200,227,0.15); border: 1px solid #7EC8E3; color: #7EC8E3; }
 .badge-total { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); }
 
-/* ===== FABRIC TESTING (Section 2 sub-block) ===== */
-.fabric-tests-block {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-.fabric-tests-title {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
-.fabric-test-group {
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px 18px;
-  margin-bottom: 12px;
-}
-.fabric-test-label {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--gold);
-  margin-bottom: 14px;
-}
-.fabric-test-label svg { opacity: 0.75; flex-shrink: 0; }
 
 /* ===== PHYSICAL TESTS ===== */
 .test-block {
@@ -885,56 +850,6 @@ td input[type="number"] { padding: 7px 10px; font-size: 13px; }
         </table>
       </div>
 
-      <!-- FABRIC TESTING SUB-SECTION -->
-      <div class="fabric-tests-block">
-        <div class="fabric-tests-title">Fabric Testing</div>
-
-        <div class="fabric-test-group">
-          <div class="fabric-test-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-            GSM — Fabric Weight
-          </div>
-          <div class="test-grid">
-            <div class="form-group">
-              <label>Swatch Weight (g)</label>
-              <input type="number" id="weightG" step="0.01" min="0" placeholder="e.g. 1.82" oninput="calcGSM()">
-            </div>
-            <div class="form-group">
-              <label>Swatch Area (cm²)</label>
-              <input type="number" id="swatchArea" step="0.1" min="0.1" placeholder="e.g. 100" oninput="calcGSM()">
-            </div>
-            <div class="form-group">
-              <label>Calculated GSM</label>
-              <div class="calc-display" id="gsmDisplay">— g/m²</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="fabric-test-group">
-          <div class="fabric-test-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"/></svg>
-            Stretch &amp; Recovery
-          </div>
-          <div class="test-grid">
-            <div class="form-group">
-              <label>Relaxed Length (cm)</label>
-              <input type="number" id="relaxedLen" step="0.1" min="0" placeholder="e.g. 10.0" oninput="calcRecovery()">
-            </div>
-            <div class="form-group">
-              <label>Stretched Length (cm)</label>
-              <input type="number" id="stretchedLen" step="0.1" min="0" placeholder="e.g. 14.5" oninput="calcRecovery()">
-            </div>
-            <div class="form-group">
-              <label>After Recovery (cm)</label>
-              <input type="number" id="recoveryLen" step="0.1" min="0" placeholder="e.g. 10.3" oninput="calcRecovery()">
-            </div>
-            <div class="form-group">
-              <label>Recovery Rate</label>
-              <div class="calc-display" id="recoveryPct">—%</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- SECTION 3: DEFECT LOG -->
@@ -1128,30 +1043,6 @@ function calcDeviation(i) {
   updateProgress();
 }
 
-// ===== GSM CALC =====
-function calcGSM() {
-  const g = parseFloat(document.getElementById('weightG').value);
-  const cm2 = parseFloat(document.getElementById('swatchArea').value);
-  if (!isNaN(g) && !isNaN(cm2) && cm2 > 0) {
-    const gsm = ((g / cm2) * 10000).toFixed(0);
-    document.getElementById('gsmDisplay').textContent = `${gsm} g/m²`;
-  } else {
-    document.getElementById('gsmDisplay').textContent = '— g/m²';
-  }
-}
-
-// ===== RECOVERY CALC =====
-function calcRecovery() {
-  const relaxed = parseFloat(document.getElementById('relaxedLen').value);
-  const stretched = parseFloat(document.getElementById('stretchedLen').value);
-  const recovery = parseFloat(document.getElementById('recoveryLen').value);
-  if (!isNaN(relaxed) && !isNaN(stretched) && !isNaN(recovery) && stretched > relaxed) {
-    const pct = (((stretched - recovery) / (stretched - relaxed)) * 100).toFixed(1);
-    document.getElementById('recoveryPct').textContent = `${pct}%`;
-  } else {
-    document.getElementById('recoveryPct').textContent = '—%';
-  }
-}
 
 // ===== TOGGLE BUTTONS =====
 function setToggle(btn, group) {
@@ -2456,48 +2347,6 @@ async function generatePDF() {
     });
     y += 8;
 
-    // ── GSM & Stretch/Recovery (fabric tests) ────────────────────
-    const gsmG    = parseFloat(document.getElementById('weightG')?.value);
-    const gsmCm2  = parseFloat(document.getElementById('swatchArea')?.value);
-    const relLen  = parseFloat(document.getElementById('relaxedLen')?.value);
-    const strLen  = parseFloat(document.getElementById('stretchedLen')?.value);
-    const recLen  = parseFloat(document.getElementById('recoveryLen')?.value);
-    const hasGSM  = !isNaN(gsmG) && !isNaN(gsmCm2) && gsmCm2 > 0;
-    const hasStretch = !isNaN(relLen) && !isNaN(strLen) && !isNaN(recLen) && strLen > relLen;
-
-    if (hasGSM || hasStretch) {
-      if (y + 20 > BODY_BOT) {
-        doc.addPage(); docPage++;
-        chrome('Specifications (cont.)', docPage, TOTAL_PAGES);
-        y = BODY_TOP + 4;
-      }
-      y = sh('Fabric Tests', y);
-      const fabCols = [
-        { label: 'Test',   w: 70 },
-        { label: 'Result', w: 60 },
-        { label: 'Notes',  w: 52 },
-      ];
-      y = tHead(fabCols, M, y, 7);
-      let fabRowIdx = 0;
-      if (hasGSM) {
-        const gsm = Math.round((gsmG / gsmCm2) * 10000);
-        y = tRow([
-          { text: 'Fabric Weight (GSM)' },
-          { text: `${gsm} g/m²`, bold: true, color: B_DARK },
-          { text: '±10 g/m² tolerance', color: SLATE_LT },
-        ], fabCols, M, y, 10, fabRowIdx++);
-      }
-      if (hasStretch) {
-        const pct = (((strLen - recLen) / (strLen - relLen)) * 100).toFixed(1);
-        const strGood = parseFloat(pct) >= 80;
-        y = tRow([
-          { text: 'Stretch & Recovery' },
-          { text: `${pct}%`, bold: true, color: strGood ? G_DARK : R_DARK },
-          { text: strGood ? 'Good elasticity' : 'Poor elasticity', color: strGood ? G_DARK : R_DARK },
-        ], fabCols, M, y, 10, fabRowIdx++);
-      }
-      y += 8;
-    }
 
     // ═════════════════════════════════════════════════════════════
     // DEFECT LOG
@@ -2665,19 +2514,6 @@ function fillRandomData() {
     document.querySelector(`input[data-row="${i}"][data-col="actual"]`).value = actual;
     calcDeviation(i);
   });
-  // Fabric testing (GSM + Stretch & Recovery)
-  const swatchG    = randF(1.4, 3.2);
-  const swatchCm2  = 100;
-  document.getElementById('weightG').value    = swatchG.toFixed(2);
-  document.getElementById('swatchArea').value = swatchCm2;
-  calcGSM();
-  const relaxedL   = 10;
-  const stretchedL = +(relaxedL + randF(3, 6)).toFixed(1);
-  const recoveredL = +(relaxedL + randF(0.1, 0.6)).toFixed(1);
-  document.getElementById('relaxedLen').value   = relaxedL;
-  document.getElementById('stretchedLen').value = stretchedL;
-  document.getElementById('recoveryLen').value  = recoveredL;
-  calcRecovery();
 
   // ── Section 3: Defect Log ─────────────────────────────────────
   // Clear all existing defect rows first
