@@ -2084,9 +2084,19 @@ async function generatePDF() {
     });
     y += scTH;
 
-    // Metric rows
+    // Fulfillment row (index 0 → even → zebra stripe, first data row)
+    fill(M, y, CW, scRH, ZEBRA);
+    hl(y + scRH, M, M + CW, RULE, 0.2);
+    t('Fulfillment Time', M + 3, y + scRH * 0.68, 7, 'normal', SLATE, 'left');
+    supData.forEach((sup, si) => {
+      const colX = M + metricColW + si * supColW;
+      t(sup.fulfill, colX + supColW / 2, y + scRH * 0.68, 7, 'normal', SLATE, 'center');
+    });
+    y += scRH;
+
+    // Metric rows (zebra offset by 1 since Fulfillment Time occupies row 0)
     scorecardMetrics.forEach((m, ri) => {
-      if (ri % 2 === 0) fill(M, y, CW, scRH, ZEBRA);
+      if (ri % 2 !== 0) fill(M, y, CW, scRH, ZEBRA);
       hl(y + scRH, M, M + CW, RULE, 0.2);
       t(m.label, M + 3, y + scRH * 0.68, 7, 'normal', SLATE, 'left');
       supData.forEach((sup, si) => {
@@ -2098,16 +2108,6 @@ async function generatePDF() {
       });
       y += scRH;
     });
-
-    // Fulfillment row (index 4 → even → zebra stripe)
-    fill(M, y, CW, scRH, ZEBRA);
-    hl(y + scRH, M, M + CW, RULE, 0.2);
-    t('Fulfillment Time', M + 3, y + scRH * 0.68, 7, 'normal', SLATE, 'left');
-    supData.forEach((sup, si) => {
-      const colX = M + metricColW + si * supColW;
-      t(sup.fulfill, colX + supColW / 2, y + scRH * 0.68, 7, 'normal', SLATE, 'center');
-    });
-    y += scRH;
 
     // Number of defects row (index 5 → odd → plain, count from defect log)
     const defectsPerSup = {};
@@ -2171,24 +2171,6 @@ async function generatePDF() {
       });
       y += sImgH + 12;
     }
-
-    // ── 3 of 3 — Recommendation box ──────────────────────────────
-    const recBoxH = 30;
-    fill(M, y, CW, recBoxH, [245, 247, 250], 3);
-    stroke(M, y, CW, recBoxH, RULE, 0.4, 3);
-    fill(M, y, 3, recBoxH, NAVY, 0);          // left accent bar
-    t('RECOMMENDATION', M + 8, y + 7, 6, 'bold', SLATE_LT, 'left');
-    const notes = v('inspectorNotes');
-    const recText = notes ||
-      (winner.avg > 0
-        ? `After testing ${supplierCount} supplier${supplierCount > 1 ? 's' : ''}, we recommend proceeding with Supplier ${winner.s} based on overall quality scores.`
-        : 'Complete supplier ratings to generate a recommendation.');
-    // Draw pill first so its label is always visible on top
-    pill(M + CW - vpW / 2 - 4, y + recBoxH / 2, vc.label, vc.bg, vc.fg, vpW, 7);
-    // Hard-cap text at 57 % of box width — leaves a clear open zone for the pill
-    const recTextMaxW = Math.round(CW * 0.57);
-    const recLines = doc.splitTextToSize(recText, recTextMaxW);
-    recLines.slice(0, 2).forEach((ln, li) => t(ln, M + 8, y + 15 + li * 5.5, 8.5, 'normal', NAVY, 'left'));
 
     // ── Cover footer ──────────────────────────────────────────────
     hl(H - FOOTER_H, 0, W, RULE, 0.3);
