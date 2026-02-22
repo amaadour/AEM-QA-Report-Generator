@@ -2351,36 +2351,6 @@ async function generatePDF() {
     t('STACKED OVERLAY \u2014 ALL SUPPLIER SAMPLES', M, y + ttsImgH + 5, 5.5, 'bold', SLATE_LT, 'left');
     y += ttsImgH + 14;
 
-    // Per-supplier sizing summary (hand-feel + sizing scores)
-    if (supData.length && y + 40 < BODY_BOT) {
-      y = sh('Sizing Consistency by Supplier', y);
-      const szCols = [
-        { label: 'Supplier',           w: 40 },
-        { label: 'Sizing Score',       w: 40 },
-        { label: 'Fulfillment Time',   w: 50 },
-        { label: 'Unit Price',         w: 52 },
-      ];
-      y = tHead(szCols, M, y, 7);
-      supData.forEach((sup, ri) => {
-        const isWin = sup.s === winner.s && winner.avg > 0;
-        if (isWin) fill(M, y, CW, 10, [220, 252, 231]);
-        else if (ri % 2 !== 0) fill(M, y, CW, 10, ZEBRA);
-        hl(y + 10, M, M + CW, RULE, 0.2);
-        let cx = M + 3;
-        const szCells = [
-          { text: `Supplier ${sup.s}`, bold: isWin, color: isWin ? G_DARK : NAVY },
-          { text: `${sup.sizing || 0}/5`,    color: (sup.sizing || 0) >= 4 ? G_DARK : SLATE },
-          { text: sup.fulfill,               color: SLATE },
-          { text: sup.price,                 color: SLATE },
-        ];
-        szCells.forEach((cell, ci) => {
-          t(String(cell.text), cx, y + 7, 7.5, cell.bold ? 'bold' : 'normal', cell.color || NAVY, 'left');
-          cx += szCols[ci].w;
-        });
-        if (isWin) t('TOP PICK', M + CW - 3, y + 7, 6, 'bold', G_DARK, 'right');
-        y += 10;
-      });
-    }
 
     // ═════════════════════════════════════════════════════════════
     // PAGE 3+ — SPECIFICATIONS (Product Details + Measurements)
